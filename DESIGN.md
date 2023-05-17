@@ -43,6 +43,8 @@ See the requirements spec for both the command-line and interactive UI.
 
 > Then briefly describe each of the major functions, perhaps with level-4 #### headers.
 
+acceptConnection()
+
 ### Major data structures
 
 > A language-independent description of the major data structure(s) in this program.
@@ -76,6 +78,22 @@ There is no interaction with the user.
 
 The server will run as follows:
 
+	parses command line for number of arguments
+	check if can open map, add randomized gold nuggets
+	start connection and wait for clients to connect
+	while game is not over:
+		if/for each client that connects:
+			if spectator, boot current spectator if exists
+				enter spectator mode
+			else
+				add player
+				draw map
+				for all players that exist, add to map
+				check for player input
+					if quit, then quit
+					if move, then update their location and information
+					if there is no more gold to get, then end game
+
 	execute from a command line per the requirement spec
 	parse the command line, validate parameters
 	call initializeGame() to set up data structures
@@ -85,8 +103,14 @@ The server will run as follows:
 	call gameOver() to inform all clients the game has ended
 	clean up
 
+We anticipate the following major functions:
 
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
+parseArgs()
+initializeGame()
+message_loop()
+initializeConnection()
+drawMap()
+gameOver()
 
 ### Major data structures
 
