@@ -1,11 +1,9 @@
 # CS50 Nuggets
 ## Design Spec
-### Team name, term, year
-
-> This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
+### Team 14 - Headbashing, Spring, 2023
 
 According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
-Our design also includes x, y, z modules.
+Our design also includes map modules.
 We describe each program and module separately.
 We do not describe the `support` library nor the modules that enable features that go beyond the spec.
 We avoid repeating information that is provided in the requirements spec.
@@ -31,6 +29,10 @@ See the requirements spec for both the command-line and interactive UI.
 > If you write to log files, or log to stderr, describe that here.
 > Command-line arguments are not 'input'.
 
+Input:
+Output:
+
+
 ### Functional decomposition into modules
 
 > List and briefly describe any modules that comprise your client, other than the main module.
@@ -53,20 +55,32 @@ See the requirements spec for both the command-line and interactive UI.
 ## Server
 ### User interface
 
-See the requirements spec for the command-line interface.
-There is no interaction with the user.
+The severs's only interface with the user is on the command-line; it requires one argument and can optionally take a second:
 
-> You may not need much more.
+``` 
+./server map.txt [seed]
+```
+
+The server has no furhter interaction with the user after it has been launched. The command-line interface takes the pathname for a map file as its first argument, with an optional second argument serving as a seed for the random-number generator. If a seed is provided, it must be a positive integer.
 
 ### Inputs and outputs
 
-> Briefly describe the inputs (map file) and outputs (to terminal).
-> If you write to log files, or log to stderr, describe that here.
-> Command-line arguments are not 'input'.
+Input:
+- Map file: A text file that contains a map layout of the game. This is read from the command-line and parsed into a 2D array. 
+- Server also recieve messages from client: `PLAY`, `SPECTATE`, `KEY`
+
+Output:
+- Map representation: The server sends a string representation of the map file to the client.
+- Terminal output: Upon launch, the server outputs the port number for client connections After all gold nuggets are collected, it prepares a summary, sends a QUIT message to all clients, prints the summary to the terminal, and exits.
 
 ### Functional decomposition into modules
 
 > List and briefly describe any modules that comprise your server, other than the main module.
+
+- Map Parse: Module responsible for parsing the map. The server is required to load a map from the file provided in order to know the layout of the game world. The map file is stored in text format and needs to be read and converted into a data structure that the program was use. 
+- Connection Manager: Module responsible for incoming client connections. It handles the networking including accepting connections, maintnig a list of currenly connected clients, and creates the seperate threads that handles the each client. 
+- Game Engine: Module responsible for processing inputs from the clients (such as player moves), updates the game state accordingly (moving players, collecting gold nuggets, etc.), and then sends the updated game state back to the clients. The game engine would use the data structure created by the Map Parser to know the layout of the game world.
+
 
 ### Pseudo code for logic/algorithmic flow
 
@@ -94,9 +108,23 @@ The server will run as follows:
 > This description should be independent of the programming language.
 > Mention, but do not describe, data structures implemented by other modules (such as the new modules you detail below, or any libcs50 data structures you plan to use).
 
+- Map module that is described below.
+- Player struct: Holds information for each player, including port ID, player ID, player name, location, gold count, vision grid, and flags for whether the player has seen all spots on the map.
+- Counter of gold piles in the map and its locations
+- Game struct: Contains all game-related data including an array of players, game map, and counters for gold piles.
+
 ---
 
-## XYZ module
+### Major data structures
+
+> Describe each major data structure in this module: what information does it represent, how does it represent the data, and what are its members.
+> This description should be independent of the programming language.
+
+Map: This data structure represents the game map. It contains information about the layout of the map and the locations of gold nuggets. It will be represented as a 2D array.
+
+---
+
+## Player Struct module
 
 > Repeat this section for each module that is included in either the client or server.
 
@@ -104,12 +132,34 @@ The server will run as follows:
 
 > List each of the main functions implemented by this module, with a phrase or sentence description of each.
 
+initializeConnection(): Initializes networking components and prepares the server to accept incoming connections.
+acceptConnection(): Listens for and accepts incoming client connections.
+manageConnection(): Maintains the list of active clients and handles the creation of separate threads for each client.
+
+
 ### Pseudo code for logic/algorithmic flow
 
 > For any non-trivial function, add a level-4 #### header and provide tab-indented pseudocode.
 > This pseudocode should be independent of the programming language.
 
+initializeConnection()::
+
+	set up server socket 
+	bind server to specified port
+	set server to listen state
+	returns server socket
+
+acceptConnection():
+
+	receive 
+
+manageConnection():
+
+	receive 
+
 ### Major data structures
 
 > Describe each major data structure in this module: what information does it represent, how does it represent the data, and what are its members.
 > This description should be independent of the programming language.
+
+Active client list: A list of currently connected clients, containing client socket descriptors and related client information.
