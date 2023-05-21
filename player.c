@@ -1,9 +1,9 @@
 /* 
- * player.c - Nuggets 'player module
+ * player.c - Nuggets 'player' module
  * 
  * See player.h for more information.
  *
- * Selena Zhou, Kyla Widodo, May 2022
+ * Selena Zhou, Kyla Widodo, 23S
  */
 
 #include <stdio.h>
