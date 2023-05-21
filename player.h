@@ -20,7 +20,7 @@ typedef struct player player_t;
 
 /**************** functions ****************/
 
-player_t* player_new(char ID, char* name);
+player_t* player_new(char* name, player_t* lastPlayer);
 void player_delete(player_t* player);
 
 void player_moveUpAndDown(player_t* player, int steps);
