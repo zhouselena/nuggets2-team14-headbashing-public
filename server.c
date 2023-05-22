@@ -7,10 +7,16 @@
  * 
  * Exit messages:
  * - (1): incorrect number of arguments
- * - (2): invalid arguments
+ * - (2): invalid argument
  *
  * Selena Zhou, Kyla Widodo, 23S
  */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "grid.h"
+#include "player.h"
 
 /**************** function declarations ****************/
 
