@@ -9,8 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grid.h"
-#include "player.h"
+#include "common/grid.h"
+#include "common/player.h"
+#include "common/hashtable.h"
 
 /**************** file-local global variables ****************/
 
@@ -24,7 +25,19 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 
 typedef struct game {
     int portID;
-    players_t** players;
+    hashtable_t* players;
+    grid_t* fullMap;
 } game_t;
 
 /**************** functions ****************/
+
+game_t* game_new(const int portID, char* mapFileName) {
+
+    game_t* game = malloc(sizeof(game_t));
+    if (game == NULL) return NULL;
+
+    game->portID = portID;
+    game->players = hashtable_new(MaxPlayers);
+    game->fullMap = grid_fromFile(mapFileName);
+
+}
