@@ -15,8 +15,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grid.h"
-#include "player.h"
+#include "common/grid.h"
+#include "common/player.h"
+#include "common/game.h"
 
 /**************** function declarations ****************/
 
@@ -60,6 +61,3 @@ void parseArgs(const int argc, char* argv[]) {
     }
 
 }
-
-
-/**************** helper functions ****************/
