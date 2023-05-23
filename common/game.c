@@ -24,20 +24,32 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 /**************** global types ****************/
 
 typedef struct game {
-    int portID;
     hashtable_t* players;
     grid_t* fullMap;
+    // may need a gold map here
+    int remainingGold;
 } game_t;
 
 /**************** functions ****************/
 
-game_t* game_new(const int portID, char* mapFileName) {
+game_t* game_new(char* mapFileName) {
 
     game_t* game = malloc(sizeof(game_t));
     if (game == NULL) return NULL;
 
-    game->portID = portID;
-    game->players = hashtable_new(MaxPlayers);
+    game->players = hagshtable_new(MaxPlayers);
+    if (game->players == NULL) return NULL;
+
     game->fullMap = grid_fromFile(mapFileName);
+    if (game->fullMap == NULL) return NULL;
+
+    game->remainingGold = GoldTotal;
+}
+
+void game_setGold(game_t* game) {
+
+    // Initialize the game by dropping
+    // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
+    // each pile shall have a random number of nuggets.
 
 }

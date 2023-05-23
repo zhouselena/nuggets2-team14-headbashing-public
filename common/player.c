@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**************** file-local global variables ****************/
+
+static char nextPlayer = 'A';
+
 /**************** global types ****************/
 typedef struct player {
     char playerID;                  // unique ID starting from A, B, C...
@@ -24,7 +28,7 @@ typedef struct player {
 
 /* create and delete */
 
-player_t* player_new(char* name, player_t* lastPlayer) {
+player_t* player_new(char* name) {
     
     player_t* player = malloc(sizeof(player_t));
 
@@ -33,8 +37,8 @@ player_t* player_new(char* name, player_t* lastPlayer) {
     }
 
     // give player a unique ID
-    if (lastPlayer == NULL) player->playerID = 'A';
-    else player->playerID = lastPlayer->playerID + 1;
+    player->playerID = nextPlayer;
+    nextPlayer += 1;
 
     player->playerName = name;
     player->numGold = 0;
