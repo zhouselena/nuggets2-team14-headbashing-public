@@ -24,9 +24,10 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 /**************** global types ****************/
 
 typedef struct game {
-    int portID;
     hashtable_t* players;
     grid_t* fullMap;
+    // may need a gold map here
+    int remainingGold;
 } game_t;
 
 /**************** functions ****************/
@@ -42,6 +43,7 @@ game_t* game_new(char* mapFileName) {
     game->fullMap = grid_fromFile(mapFileName);
     if (game->fullMap == NULL) return NULL;
 
+    game->remainingGold = GoldTotal;
 }
 
 void game_setGold(game_t* game) {

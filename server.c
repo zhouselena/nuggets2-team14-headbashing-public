@@ -85,7 +85,7 @@ game_t* initializeGame(char* mapFileName) {
         fprintf(stderr, "Unable to create a new game from given map file.\n");
         exit(3);
     }
-    
+
     game_setGold(newGame);
 
 }
@@ -125,3 +125,10 @@ bool handleMessage(void* arg) {
      */
 
 }
+
+
+/*
+    In the game:
+    PLAY adds a player to the Game hashtable, QUIT if game is full or no name provided, OK if successfully added
+    to move a player, you need to -get the player from the hashtable, use cmds from player module
+ */
