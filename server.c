@@ -21,10 +21,14 @@
 #include "common/game.h"
 #include "common/message.h"
 
+/**************** global variable ****************/
+
+game_t* game;
+
 /**************** function declarations ****************/
 
 void parseArgs(const int argc, char* argv[]);
-game_t* initializeGame();
+void initializeGame();
 bool handleMessage(void* arg);
 /* message_loop(void* arg, const float timeout,
              bool (*handleTimeout)(void* arg),
@@ -39,7 +43,7 @@ int main(const int argc, char* argv[]) {
 
     // Verify arguments and seed.
     parseArgs(argc, argv);
-    game_t* game = initializeGame();
+    initializeGame();
 
     // Initialize the network and announce the port number.
     int portID = message_init(stdin);
@@ -78,29 +82,19 @@ void parseArgs(const int argc, char* argv[]) {
 }
 
 // Initializes game locally, makes sure everything can be set up
-game_t* initializeGame(char* mapFileName) {
+void initializeGame(char* mapFileName) {
 
-    game_t* newGame = game_new(mapFileName);
-    if (newGame == NULL) {
+    game = game_new(mapFileName);
+    if (game == NULL) {
         fprintf(stderr, "Unable to create a new game from given map file.\n");
         exit(3);
     }
 
-    game_setGold(newGame);
+    game_setGold(game);
 
 }
 
-bool handleMessage(void* arg) {
-
-    char* message = arg;    // cast to string
-
-    switch (message[0]) {
-        case "S": // spectator
-        case "P": // new player
-        case "K": // key press, switch again
-    }
-    
-    /* Split message into a string array
+/* Split message into a string array
      * split takes strncmp for the first command, then the rest of it is just information
      * or you can just strtok once for the first cmd
      * char* command = ;
@@ -113,7 +107,6 @@ bool handleMessage(void* arg) {
      *      GOLD n p r
      *      DISPLAY\nstring
      * case "SPECTATE":
-     *      QUIT You have been replaced by a new spectator.
      * case "KEY"
      *      DISPLAY
      *      ERROR
@@ -131,13 +124,13 @@ bool handleMessage(void* arg) {
      * B         16 Bob
      * C        230 Carol
      */
+bool handleMessage(void* arg, const addr_t from, const char* message) {
+
+    switch (message[0]) {
+        case "S": game_addSpectator(game, from);    // new spectator
+        case "P": game_addPlayer(game, from);       // new player
+        case "K": game_keyPress(game, from, message); // key press, switch again
+    }
 
 }
 
-/*
-    In the game:
-    PLAY adds a player to the Game hashtable, QUIT if game is full or no name provided, OK if successfully added
-    to move a player, you need to
-        -get the player from the hashtable
-        -use cmds from player module
- */
