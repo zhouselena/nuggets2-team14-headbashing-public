@@ -15,6 +15,7 @@
 static char nextPlayer = 'A';
 
 /**************** global types ****************/
+
 typedef struct player {
     addr_t* playerAddress;
     char playerID;                  // unique ID starting from A, B, C...
@@ -50,8 +51,8 @@ player_t* player_new() {
 }
 
 void player_delete(player_t* player) {
+    free(player->playerName);
     free(player);
-    // shouldn't have to delete anything else right? nothing else was malloc'd
 }
 
 /* set functions */
@@ -72,6 +73,10 @@ void player_foundGoldNuggets(player_t* player, int numGold);
 
 /* getter functions */
 
+addr_t* player_getAddr(player_t* player) {
+    return player->playerAddress;
+}
+
 char player_getID(player_t* player) {
     return player->playerID;
 }
@@ -91,3 +96,4 @@ int player_getYLocation(player_t* player) {
 int player_getGold(player_t* player) {
     return player->numGold;
 }
+

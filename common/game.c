@@ -25,13 +25,18 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 /**************** global types ****************/
 
 typedef struct game {
-    hashtable_t* players;
+    hashtable_t* players;       // holds char* playerID to player_t* player
     int numbPlayers;
     addr_t* spectator;
     grid_t* fullMap;
     // may need a gold map here
     int remainingGold;
 } game_t;
+
+typedef struct findPlayer {         // for find player
+    addr_t* matchAddress;
+    player_t* foundPlayer;
+} findPlayer_t;
 
 /**************** functions ****************/
 
@@ -64,20 +69,57 @@ void game_setGold(game_t* game) {
 void game_addSpectator(game_t* game, addr_t* newSpectator) {
     if (message_isAddr(newSpectator)) {
         if (game->spectator != NULL) {
-            message_send(game->spectator, "QUIT You have been replaced by a new spectator.")
+            message_send(game->spectator, "QUIT You have been replaced by a new spectator.");
         }
         game->spectator = newSpectator;
     }
 }
 
-void game_addPlayer(game_t* game, addr_t* player, char* message) {
+void game_addPlayer(game_t* game, addr_t* playerAddr, char* message) {
+
+    // Send QUIT message if at max players or no player name provided
     if (game->numbPlayers == MaxPlayers) {
-        message_send(player, "QUIT Game is full: no more players can join.")
+        message_send(playerAddr, "QUIT Game is full: no more players can join.");
         return;
     }
-    /* QUIT Sorry - you must provide player's name.
-     * OK playerID
+
+    char* cmd = malloc(strlen(message));
+    char* playerName = malloc(strlen(message));
+    sscanf(message, "%s %s", cmd, playerName); // may have an issue for "" names
+
+    if (strlen(playerName) == 0) {
+        message_send(playerAddr, "QUIT Sorry - you must provide player's name.");
+        return;
+    }
+
+    // Create new player and send OK message
+    player_t* newPlayer = player_new();
+    player_setAddress(newPlayer, playerAddr);
+    char* setName = malloc(MaxNameLength);      // need to be free'd in player_delete
+    strncpy(setName, playerName, MaxNameLength);
+    player_setName(newPlayer, setName);
+
+    free(cmd);
+    free(playerName);
+
+    game->numbPlayers += 1;
+
+    char* sendOKmessage = malloc(strlen(10));
+    sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
+    message_send(playerAddr, sendOKmessage);
+
+    // Send information to client
+
+    /* 
      * GRID nrows ncols
+     */
+
+    game_sendDisplayMessage(game, playerAddr);
+
+}
+
+void game_sendDisplayMessage(game_t* game, addr_t* player) {
+    /* 
      * GOLD n p r
      * DISPLAY\nstring
      */
@@ -86,6 +128,18 @@ void game_addPlayer(game_t* game, addr_t* player, char* message) {
 void game_keyPress(game_t* game, addr_t* player, char* message) {
 
 }
+
+/* key press helper functions */
+
+void game_Q_quitGame(game_t* game, addr_t* player, char* message);
+void game_h_moveLeft(game_t* game, addr_t* player, char* message);
+void game_l_moveRight(game_t* game, addr_t* player, char* message);
+void game_j_moveDown(game_t* game, addr_t* player, char* message);
+void game_k_moveUp(game_t* game, addr_t* player, char* message);
+void game_y_moveDiagUpLeft(game_t* game, addr_t* player, char* message);
+void game_u_moveDiagUpRight(game_t* game, addr_t* player, char* message);
+void game_b_moveDiagDownLeft(game_t* game, addr_t* player, char* message);
+void game_n_moveDiagDownRight(game_t* game, addr_t* player, char* message);
 
 /*
     add player (MaxNameLength, MaxPlayers put in use)
@@ -102,4 +156,25 @@ void game_keyPress(game_t* game, addr_t* player, char* message) {
     to move a player, you need to
         -get the player from the hashtable
         -use cmds from player module
- */
+*/
+
+/* helpers */
+
+player_t* game_getPlayerFromAddr(game_t* game, addr_t* addr) {
+
+    findPlayer_t* playerInfoPack = malloc(sizeof(findPlayer_t));
+    player_t* findThisPlayer;
+    playerInfoPack->matchAddress = addr;
+    playerInfoPack->foundPlayer = findThisPlayer;
+    hashtable_iterate(game->players, playerInfoPack, game_getPlayerFromAddr_Helper);
+    return findThisPlayer;
+
+}
+
+void* game_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
+    findPlayer_t* playerInfoPack = arg;         // cast to info pack
+    player_t* currentPlayer = item;             // cast to player
+    if (message_eqAddr(player_getAddr(currentPlayer), playerInfoPack->matchAddress)) {
+        playerInfoPack->foundPlayer = currentPlayer;
+    }
+}
