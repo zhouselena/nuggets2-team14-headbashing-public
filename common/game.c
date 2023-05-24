@@ -25,6 +25,7 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 
 typedef struct game {
     hashtable_t* players;
+    addr_t* spectator;
     grid_t* fullMap;
     // may need a gold map here
     int remainingGold;
@@ -53,3 +54,14 @@ void game_setGold(game_t* game) {
     // each pile shall have a random number of nuggets.
 
 }
+
+/*
+    add player (MaxNameLength, MaxPlayers put in use)
+    add spectator
+    Get player given address
+    player move left
+    player move right
+    player move up
+    player move down
+    player found gold
+ */

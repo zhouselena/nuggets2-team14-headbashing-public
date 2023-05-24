@@ -93,8 +93,16 @@ game_t* initializeGame(char* mapFileName) {
 bool handleMessage(void* arg) {
 
     char* message = arg;    // cast to string
+
+    switch (message[0]) {
+        case "S": // spectator
+        case "P": // new player
+        case "K": // key press, switch again
+    }
     
     /* Split message into a string array
+     * split takes strncmp for the first command, then the rest of it is just information
+     * or you can just strtok once for the first cmd
      * char* command = ;
      * switch (command) {
      * case "PLAY":
@@ -126,9 +134,10 @@ bool handleMessage(void* arg) {
 
 }
 
-
 /*
     In the game:
     PLAY adds a player to the Game hashtable, QUIT if game is full or no name provided, OK if successfully added
-    to move a player, you need to -get the player from the hashtable, use cmds from player module
+    to move a player, you need to
+        -get the player from the hashtable
+        -use cmds from player module
  */
