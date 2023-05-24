@@ -127,10 +127,12 @@ void initializeGame(char* mapFileName) {
 bool handleMessage(void* arg, const addr_t from, const char* message) {
 
     switch (message[0]) {
-        case "S": game_addSpectator(game, from);    // new spectator
-        case "P": game_addPlayer(game, from);       // new player
-        case "K": game_keyPress(game, from, message); // key press, switch again
+        case "S": game_addSpectator(game, from);            // new spectator
+        case "P": game_addPlayer(game, from, message);      // new player
+        case "K": game_keyPress(game, from, message);       // key press
+        default: return false;                              // log error here?
     }
+    return true;
 
 }
 

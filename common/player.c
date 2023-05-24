@@ -16,6 +16,7 @@ static char nextPlayer = 'A';
 
 /**************** global types ****************/
 typedef struct player {
+    addr_t* playerAddress;
     char playerID;                  // unique ID starting from A, B, C...
     char* playerName;               // player real name that client inputs
     int playerXLocation;            // player location x value
@@ -28,7 +29,7 @@ typedef struct player {
 
 /* create and delete */
 
-player_t* player_new(char* name) {
+player_t* player_new() {
     
     player_t* player = malloc(sizeof(player_t));
 
@@ -39,8 +40,7 @@ player_t* player_new(char* name) {
     // give player a unique ID
     player->playerID = nextPlayer;
     nextPlayer += 1;
-
-    player->playerName = name;
+    // start player purse with 0
     player->numGold = 0;
     // TODO: playerXLocation
     // TODO: playerYLocation
@@ -52,6 +52,16 @@ player_t* player_new(char* name) {
 void player_delete(player_t* player) {
     free(player);
     // shouldn't have to delete anything else right? nothing else was malloc'd
+}
+
+/* set functions */
+
+void player_setAddress(player_t* player, addr_t* address) {
+    player->playerAddress = address;
+}
+
+void player_setName(player_t* player, char* name) {
+    player->playerName = name;
 }
 
 /* update functions */

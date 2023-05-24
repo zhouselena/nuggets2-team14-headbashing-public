@@ -26,6 +26,7 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 
 typedef struct game {
     hashtable_t* players;
+    int numbPlayers;
     addr_t* spectator;
     grid_t* fullMap;
     // may need a gold map here
@@ -47,6 +48,7 @@ game_t* game_new(char* mapFileName) {
 
     game->spectator = NULL;
     game->remainingGold = GoldTotal;
+    game->numbPlayers = 0;
 }
 
 void game_setGold(game_t* game) {
@@ -68,8 +70,21 @@ void game_addSpectator(game_t* game, addr_t* newSpectator) {
     }
 }
 
-void game_addPlayer(game_t* game, addr_t* player) {
-    
+void game_addPlayer(game_t* game, addr_t* player, char* message) {
+    if (game->numbPlayers == MaxPlayers) {
+        message_send(player, "QUIT Game is full: no more players can join.")
+        return;
+    }
+    /* QUIT Sorry - you must provide player's name.
+     * OK playerID
+     * GRID nrows ncols
+     * GOLD n p r
+     * DISPLAY\nstring
+     */
+}
+
+void game_keyPress(game_t* game, addr_t* player, char* message) {
+
 }
 
 /*
