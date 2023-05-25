@@ -10,7 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include "grid.h"
-#include "message.h" // only for message_MaxBytes
+#include "../support/message.h" // only for message_MaxBytes
 
 /**************** types ****************/
 
