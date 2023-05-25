@@ -127,6 +127,18 @@ void game_sendDisplayMessage(game_t* game, addr_t* player) {
 
 void game_keyPress(game_t* game, addr_t* player, char* message) {
 
+    switch(message[5]) {        // message is in format "KEY k"
+        case "Q": game_Q_quitGame(game, player, message);
+        case "h": game_h_moveLeft(game, player, message);
+        case "l": game_l_moveRight(game, player, message);
+        case "j": game_j_moveDown(game, player, message);
+        case "k": game_k_moveUp(game, player, message);
+        case "y": game_y_moveDiagUpLeft(game, player, message);
+        case "u": game_u_moveDiagUpRight(game, player, message);
+        case "b": game_b_moveDiagDownLeft(game, player, message);
+        case "n": game_n_moveDiagDownRight(game, player, message);
+    }
+
 }
 
 /* key press helper functions */
@@ -142,20 +154,32 @@ void game_b_moveDiagDownLeft(game_t* game, addr_t* player, char* message);
 void game_n_moveDiagDownRight(game_t* game, addr_t* player, char* message);
 
 /*
-    add player (MaxNameLength, MaxPlayers put in use)
-    add spectator
-    Get player given address
-    player move left
-    player move right
-    player move up
-    player move down
-    player found gold
-
-    In the game:
-    PLAY adds a player to the Game hashtable, QUIT if game is full or no name provided, OK if successfully added
-    to move a player, you need to
-        -get the player from the hashtable
-        -use cmds from player module
+* char* command = ;
+* switch (command) {
+* case "PLAY":
+*      QUIT Game is full: no more players can join.
+*      QUIT Sorry - you must provide player's name.
+*      OK playerID
+*      GRID nrows ncols
+*      GOLD n p r
+*      DISPLAY\nstring
+* case "SPECTATE":
+* case "KEY"
+*      DISPLAY
+*      ERROR
+*      QUIT Thanks for playing!
+*      QUIT Thanks for watching!
+* GRID nrows ncols
+* GOLD n p r
+* DISPLAY\nstring
+* default:
+*      ERROR explanation
+* }
+* 
+* QUIT GAME OVER:
+* A          4 Alice
+* B         16 Bob
+* C        230 Carol
 */
 
 /* helpers */

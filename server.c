@@ -29,12 +29,7 @@ game_t* game;
 
 void parseArgs(const int argc, char* argv[]);
 void initializeGame();
-bool handleMessage(void* arg);
-/* message_loop(void* arg, const float timeout,
-             bool (*handleTimeout)(void* arg),
-             bool (*handleInput)  (void* arg),
-             bool (*handleMessage)(void* arg,
-                                   const addr_t from, const char* buf))*/
+bool handleMessage(void* arg, const addr_t from, const char* message);
 void game_over();
 
 /**************** main ****************/
@@ -94,36 +89,6 @@ void initializeGame(char* mapFileName) {
 
 }
 
-/* Split message into a string array
-     * split takes strncmp for the first command, then the rest of it is just information
-     * or you can just strtok once for the first cmd
-     * char* command = ;
-     * switch (command) {
-     * case "PLAY":
-     *      QUIT Game is full: no more players can join.
-     *      QUIT Sorry - you must provide player's name.
-     *      OK playerID
-     *      GRID nrows ncols
-     *      GOLD n p r
-     *      DISPLAY\nstring
-     * case "SPECTATE":
-     * case "KEY"
-     *      DISPLAY
-     *      ERROR
-     *      QUIT Thanks for playing!
-     *      QUIT Thanks for watching!
-     * GRID nrows ncols
-     * GOLD n p r
-     * DISPLAY\nstring
-     * default:
-     *      ERROR explanation
-     * }
-     * 
-     * QUIT GAME OVER:
-     * A          4 Alice
-     * B         16 Bob
-     * C        230 Carol
-     */
 bool handleMessage(void* arg, const addr_t from, const char* message) {
 
     switch (message[0]) {
