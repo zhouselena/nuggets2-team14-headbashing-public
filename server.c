@@ -29,39 +29,11 @@ game_t* game;
 /**************** function declarations ****************/
 
 void parseArgs(const int argc, char* argv[]);
-void initializeGame();
+void initializeGame(char* mapFileName);
 bool handleMessage(void* arg, const addr_t from, const char* message);
-void game_over();
+void game_over(); // calls message_done
 
 /**************** main ****************/
-
-bool miniclientHandleMessage(void* arg, const addr_t from, const char* message) {
-    if (strncmp(message, "PLAY", strlen("PLAY")) == 0) {
-        message_send(from, "PLAY command received.");
-    }
-    else if (strncmp(message, "SPECTATE", strlen("SPECTATE")) == 0) {
-        message_send(from, "SPECTATE command received.");
-    }
-    else if (strncmp(message, "KEY", strlen("KEY")) == 0) {
-        message_send(from, "KEY command received.");
-    }
-    else if (strncmp(message, "QUIT", strlen("QUIT")) == 0) {
-        message_send(from, "Server is quitting.");
-        return true;
-    }
-    else {
-        message_send(from, "Connected to server.");
-    }
-    return false;
-}
-
-bool handleInput (void *arg) {
-    if(feof(stdin)) {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 int main(const int argc, char* argv[]) {
 
@@ -74,7 +46,10 @@ int main(const int argc, char* argv[]) {
     fprintf(stdout, "Server is running at %d\n", portID);
 
     // Wait for messages from clients (players or spectators). (call message_loop() from message)
-    message_loop(NULL, 0, NULL, handleInput, miniclientHandleMessage);
+    message_loop(NULL, 0, NULL, handleInput, handleMessage);        // figure out the first three args
+
+    // Free everything, call game_over()
+    // game_over();
 
 }
 
@@ -120,15 +95,36 @@ void parseArgs(const int argc, char* argv[]) {
 
 // }
 
-// bool handleMessage(void* arg, const addr_t from, const char* message) {
+bool handleInput (void *arg) {
+    if(feof(stdin)) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
-//     switch (message[0]) {
-//         case "S": game_addSpectator(game, from);            // new spectator
-//         case "P": game_addPlayer(game, from, message);      // new player
-//         case "K": game_keyPress(game, from, message);       // key press
-//         default: return false;                              // log error here?
-//     }
-//     return true;
-
-// }
+bool handleMessage(void* arg, const addr_t from, const char* message) {
+    if (strncmp(message, "PLAY", strlen("PLAY")) == 0) {
+        message_send(from, "PLAY command received.");               // for debugging, delete later
+        game_addPlayer(game, from, message);                        // new player
+    }
+    else if (strncmp(message, "SPECTATE", strlen("SPECTATE")) == 0) {
+        message_send(from, "SPECTATE command received.");           // for debugging, delete later
+        game_addSpectator(game, from);                              // new spectator
+    }
+    else if (strncmp(message, "KEY", strlen("KEY")) == 0) {
+        message_send(from, "KEY command received.");                // for debugging, delete later
+        return game_keyPress(game, from, message);                  // key press
+    }
+    else if (strncmp(message, "QUIT", strlen("QUIT")) == 0) {       // for debugging, delete this!
+        message_send(from, "Server is quitting.");
+        message_done();
+        return true;
+    }
+    else {
+        message_send(from, "Command not recognized.");
+        // log error here?
+    }
+    return false;
+}
 

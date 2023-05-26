@@ -143,7 +143,9 @@ void game_keyPress(game_t* game, addr_t* player, char* message) {
 
 /* key press helper functions */
 
-void game_Q_quitGame(game_t* game, addr_t* player, char* message);
+void game_Q_quitGame(game_t* game, addr_t* player, char* message) {
+    
+}
 void game_h_moveLeft(game_t* game, addr_t* player, char* message);
 void game_l_moveRight(game_t* game, addr_t* player, char* message);
 void game_j_moveDown(game_t* game, addr_t* player, char* message);
