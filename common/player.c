@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../support/message.h"
 
 /**************** file-local global variables ****************/
 
@@ -34,7 +35,7 @@ player_t* player_new() {
     
     player_t* player = malloc(sizeof(player_t));
 
-    if (player == NULL || name == NULL) {       // defensive OR memory fails to malloc
+    if (player == NULL) {       // defensive OR memory fails to malloc
         return NULL;
     }
 

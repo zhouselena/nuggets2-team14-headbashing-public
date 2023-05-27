@@ -24,12 +24,13 @@
 
 /**************** global variable ****************/
 
-game_t* game;
+game_t* game;           // Global game variable
 
 /**************** function declarations ****************/
 
 void parseArgs(const int argc, char* argv[]);
 void initializeGame(char* mapFileName);
+bool handleInput (void *arg);
 bool handleMessage(void* arg, const addr_t from, const char* message);
 void game_over(); // calls message_done
 
@@ -37,9 +38,9 @@ void game_over(); // calls message_done
 
 int main(const int argc, char* argv[]) {
 
-    // Verify arguments and seed.
+    // Verify arguments and seed, initializes game.
     parseArgs(argc, argv);
-    // initializeGame();
+    initializeGame(argv[1]);
 
     // Initialize the network and announce the port number.
     int portID = message_init(stdin);
@@ -55,7 +56,12 @@ int main(const int argc, char* argv[]) {
 
 /**************** functions ****************/
 
-// Validate arguments, exits nonzero if fails
+/* parseArgs:
+ * Validate arguments, exits nonzero if fails.
+ *
+ * Caller provides: argc, argv
+ * Returns: nothing, exits nonzero if fails.
+ */
 void parseArgs(const int argc, char* argv[]) {
 
     if (argc < 2 || argc > 3) {     // incorrect number of arguments
@@ -82,19 +88,30 @@ void parseArgs(const int argc, char* argv[]) {
 
 }
 
-// Initializes game locally, makes sure everything can be set up
-// void initializeGame(char* mapFileName) {
+/* initializeGame:
+ * Initializes game locally. Creates game/grid from map file, sets up random gold piles.
+ *
+ * Caller provides: mapFileName
+ * Returns: nothing, exits nonzero if fails.
+ */
+void initializeGame(char* mapFileName) {
 
-//     game = game_new(mapFileName);
-//     if (game == NULL) {
-//         fprintf(stderr, "Unable to create a new game from given map file.\n");
-//         exit(3);
-//     }
+    game = game_new(mapFileName);
+    if (game == NULL) {
+        fprintf(stderr, "Unable to create a new game from given map file.\n");
+        exit(3);
+    }
 
-//     game_setGold(game);
+    // game_setGold(game);
 
-// }
+}
 
+/* handleInput:
+ * To be fed into message_loop(). Handles input from stdin.
+ *
+ * Caller provides: void *arg
+ * Returns: true if EOF, false otherwise.
+ */
 bool handleInput (void *arg) {
     if(feof(stdin)) {
         return true;
@@ -103,6 +120,12 @@ bool handleInput (void *arg) {
     }
 }
 
+/* handleMessage:
+ * To be fed into message_loop(). Calls game functions based on input from client.
+ *
+ * Caller provides: void *arg, from address, command message
+ * Returns: true if server is quitting, false otherwise.
+ */
 bool handleMessage(void* arg, const addr_t from, const char* message) {
     if (strncmp(message, "PLAY", strlen("PLAY")) == 0) {
         message_send(from, "PLAY command received.");               // for debugging, delete later
@@ -114,7 +137,7 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
     }
     else if (strncmp(message, "KEY", strlen("KEY")) == 0) {
         message_send(from, "KEY command received.");                // for debugging, delete later
-        return game_keyPress(game, from, message);                  // key press
+        game_keyPress(game, from, message);                  // key press
     }
     else if (strncmp(message, "QUIT", strlen("QUIT")) == 0) {       // for debugging, delete this!
         message_send(from, "Server is quitting.");
@@ -128,3 +151,13 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
     return false;
 }
 
+/* game_over:
+ * Calls at the end of game.
+ * Sends ending message to all clients,
+ * kicks clients out,
+ * frees game,
+ * then calls message_done().
+ */
+void game_over() {
+
+}

@@ -5,21 +5,25 @@
 #
 # Selena Zhou, Kyla Widodo 23S
 
-# OBJS = game.o grid.o player.o hashtable.o set.o
-OBJS = hashtable.o set.o
+OBJS = game.o player.o hashtable.o set.o hash.o
+# grid.o
 LIB = common.a
+S = ../support
+LLIBS = $S/support.a
 
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS)
 CC = gcc
 MAKE = make
 
-$(LIB): $(OBJS)
+$(LIB): $(OBJS) $(LLIBS)
 	ar cr $(LIB) $(OBJS)
 
-# game.o: game.h grid.h player.h hashtable.h ../support/message.h
-# grid.o: grid.h ../support/message.h
-# player.o: player.h
+message.o: $S/message.h
+game.o: $S/message.h grid.h player.h hashtable.h game.h
+# grid.o: grid.h $S/message.h
+player.o: player.h
 hashtable.o: hashtable.h set.h hash.h
+hash.o: hash.h
 set.o: set.h
 
 .PHONY: all clean
