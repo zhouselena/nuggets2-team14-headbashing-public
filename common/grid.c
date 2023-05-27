@@ -10,7 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include "grid.h"
-#include "message.h" // only for message_MaxBytes
+#include "../support/message.h" // only for message_MaxBytes
 
 /**************** types ****************/
 
@@ -29,6 +29,14 @@ struct grid {                 // details of type, known inside this module
 #define CELL(g,r,c) ((g)->cells[(r) * ((g)->ncols + 1) + (c)])
 
 /**************** file-local global variables ****************/
+
+static const int MinRows = 3;
+static const int MinCols = 3;
+/* smallest map possible is
+ * +-+
+ * |@|
+ * +-+
+ */
 
 /**************** local function prototypes ****************/
 /* not visible outside this file */

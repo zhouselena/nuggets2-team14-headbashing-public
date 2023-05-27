@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../support/message.h"
 
 /**************** global types ****************/
 typedef struct player player_t;
@@ -27,6 +28,7 @@ void player_moveUpAndDown(player_t* player, int steps);
 void player_moveLeftAndRight(player_t* player, int steps);
 void player_foundGoldNuggets(player_t* player, int numGold);
 
+addr_t* player_getAddr(player_t* player);
 char player_getID(player_t* player);
 char* player_getName(player_t* player);
 int player_getXLocation(player_t* player);

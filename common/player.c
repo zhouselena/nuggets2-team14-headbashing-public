@@ -9,13 +9,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../support/message.h"
 
 /**************** file-local global variables ****************/
 
 static char nextPlayer = 'A';
 
 /**************** global types ****************/
+
 typedef struct player {
+    addr_t* playerAddress;
     char playerID;                  // unique ID starting from A, B, C...
     char* playerName;               // player real name that client inputs
     int playerXLocation;            // player location x value
@@ -28,19 +31,18 @@ typedef struct player {
 
 /* create and delete */
 
-player_t* player_new(char* name) {
+player_t* player_new() {
     
     player_t* player = malloc(sizeof(player_t));
 
-    if (player == NULL || name == NULL) {       // defensive OR memory fails to malloc
+    if (player == NULL) {       // defensive OR memory fails to malloc
         return NULL;
     }
 
     // give player a unique ID
     player->playerID = nextPlayer;
     nextPlayer += 1;
-
-    player->playerName = name;
+    // start player purse with 0
     player->numGold = 0;
     // TODO: playerXLocation
     // TODO: playerYLocation
@@ -50,8 +52,18 @@ player_t* player_new(char* name) {
 }
 
 void player_delete(player_t* player) {
+    free(player->playerName);
     free(player);
-    // shouldn't have to delete anything else right? nothing else was malloc'd
+}
+
+/* set functions */
+
+void player_setAddress(player_t* player, addr_t* address) {
+    player->playerAddress = address;
+}
+
+void player_setName(player_t* player, char* name) {
+    player->playerName = name;
 }
 
 /* update functions */
@@ -61,6 +73,10 @@ void player_moveLeftAndRight(player_t* player, int steps);
 void player_foundGoldNuggets(player_t* player, int numGold);
 
 /* getter functions */
+
+addr_t* player_getAddr(player_t* player) {
+    return player->playerAddress;
+}
 
 char player_getID(player_t* player) {
     return player->playerID;
@@ -81,3 +97,4 @@ int player_getYLocation(player_t* player) {
 int player_getGold(player_t* player) {
     return player->numGold;
 }
+
