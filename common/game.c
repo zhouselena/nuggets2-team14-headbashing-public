@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include "grid.h"
+#include "grid.h"
 #include "player.h"
 #include "hashtable.h"
 #include "../support/message.h"
@@ -28,7 +28,7 @@ typedef struct game {
     hashtable_t* players;       // holds char* playerID to player_t* player
     int numbPlayers;
     addr_t spectator;
-    // grid_t* fullMap;
+    grid_t* fullMap;
     // may need a gold map here
     int remainingGold;
 } game_t;
@@ -48,8 +48,8 @@ game_t* game_new(char* mapFileName) {
     game->players = hashtable_new(MaxPlayers);
     if (game->players == NULL) return NULL;
 
-    // game->fullMap = grid_fromFile(mapFileName);
-    // if (game->fullMap == NULL) return NULL;
+    game->fullMap = grid_fromFile(mapFileName);
+    if (game->fullMap == NULL) return NULL;
 
     game->remainingGold = GoldTotal;
     game->numbPlayers = 0;

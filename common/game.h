@@ -37,6 +37,6 @@ void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message);
 void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message);
 void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message);
 
-void game_keyPress(game_t* game, addr_t player, char* message);
+void game_keyPress(game_t* game, addr_t player, const char* message);
 
 #endif // __GAME_H

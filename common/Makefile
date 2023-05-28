@@ -15,7 +15,7 @@ CC = gcc
 MAKE = make
 
 $(LIB): $(OBJS) $(LLIBS)
-	ar cr $(LIB) $(OBJS)
+	ar cr $(LIB) -lm $(OBJS)
 
 message.o: $S/message.h
 game.o: $S/message.h grid.h player.h hashtable.h game.h
