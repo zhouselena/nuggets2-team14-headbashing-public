@@ -12,7 +12,7 @@ CC = gcc
 MAKE = make
 
 server: server.o $(LLIBS)
-	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+	$(CC) $(CFLAGS) $^ -lm $(LIBS) -o $@
 
 server.o: $C/grid.h $C/player.h $C/game.h $S/message.h
 
@@ -23,7 +23,6 @@ all:
 	make -C common
 	server
 # 	make -C client
-# 	make -C server
 
 ############### TAGS for emacs users ##########
 TAGS:  Makefile */Makefile */*.c */*.h */*.md */*.sh
@@ -35,4 +34,3 @@ clean:
 	rm -f TAGS
 	make -C common clean
 #	make -C client clean
-#	make -C server clean

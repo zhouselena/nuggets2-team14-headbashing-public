@@ -21,14 +21,17 @@ typedef struct player player_t;
 
 /**************** functions ****************/
 
-player_t* player_new(char* name, player_t* lastPlayer);
+player_t* player_new();
 void player_delete(player_t* player);
+
+void player_setAddress(player_t* player, addr_t address);
+void player_setName(player_t* player, char* name);
 
 void player_moveUpAndDown(player_t* player, int steps);
 void player_moveLeftAndRight(player_t* player, int steps);
 void player_foundGoldNuggets(player_t* player, int numGold);
 
-addr_t* player_getAddr(player_t* player);
+addr_t player_getAddr(player_t* player);
 char player_getID(player_t* player);
 char* player_getName(player_t* player);
 int player_getXLocation(player_t* player);

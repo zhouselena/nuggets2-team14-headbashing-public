@@ -18,7 +18,7 @@ static char nextPlayer = 'A';
 /**************** global types ****************/
 
 typedef struct player {
-    addr_t* playerAddress;
+    addr_t playerAddress;
     char playerID;                  // unique ID starting from A, B, C...
     char* playerName;               // player real name that client inputs
     int playerXLocation;            // player location x value
@@ -58,7 +58,7 @@ void player_delete(player_t* player) {
 
 /* set functions */
 
-void player_setAddress(player_t* player, addr_t* address) {
+void player_setAddress(player_t* player, addr_t address) {
     player->playerAddress = address;
 }
 
@@ -74,7 +74,7 @@ void player_foundGoldNuggets(player_t* player, int numGold);
 
 /* getter functions */
 
-addr_t* player_getAddr(player_t* player) {
+addr_t player_getAddr(player_t* player) {
     return player->playerAddress;
 }
 
