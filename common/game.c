@@ -75,9 +75,15 @@ void game_addSpectator(game_t* game, addr_t newSpectator) {
 
 void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
-    // Send QUIT message if at max players or no player name provided
+    // Send QUIT if at max players
     if (game->numbPlayers == MaxPlayers) {
         message_send(playerAddr, "QUIT Game is full: no more players can join.");
+        return;
+    }
+
+    // Send ERROR if Spectator sends
+    if (message_eqAddr(game->spectator, playerAddr)) {
+        message_send(playerAddr, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -85,14 +91,13 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     char* playerName = malloc(strlen(message));
     sscanf(message, "%s %s", cmd, playerName); // may have an issue for "" names
 
+    // Send QUIT if no player name provided
     if (strlen(playerName) == 0) {
         message_send(playerAddr, "QUIT Sorry - you must provide player's name.");
         return;
     }
 
     game->numbPlayers += 1;
-
-    message_send(playerAddr, "OK");
 
     // Create new player and send OK message
     player_t* newPlayer = player_new();
@@ -152,7 +157,7 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 void game_l_moveRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -161,16 +166,16 @@ void game_l_moveRight(game_t* game, addr_t player, const char* message) {
 void game_j_moveDown(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
-    message_send(player, "j key received.");
+    message_send(player, "j key received for spectator.");
 }
 void game_k_moveUp(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -179,7 +184,7 @@ void game_k_moveUp(game_t* game, addr_t player, const char* message) {
 void game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -188,7 +193,7 @@ void game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -197,7 +202,7 @@ void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
@@ -206,7 +211,7 @@ void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR: Invalid key for spectator.");
         return;
     }
 
