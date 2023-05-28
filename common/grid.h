@@ -7,6 +7,26 @@
 #ifndef _GRID_H_
 #define _GRID_H_
 
+// the base grid comprises following characters
+#define GRID_BLANK      ' '  // grid.c depends on this being space
+#define GRID_ROOM_SPOT  '.'
+#define GRID_PASS_SPOT  '#'
+#define GRID_WALL_VERT  '|'
+#define GRID_WALL_HORZ  '-'
+#define GRID_WALL_CORN  '+'
+
+// the occupants grid comprises the following characters, plus letters
+#define GRID_PLAYER_ME  '@'
+#define GRID_GOLD       '*'
+
+/* smallest map possible is
+ * +-+
+ * |.|
+ * +-+
+ */
+#define MinRows 3
+#define MinCols 3
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>

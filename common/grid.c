@@ -30,14 +30,6 @@ struct grid {                 // details of type, known inside this module
 
 /**************** file-local global variables ****************/
 
-static const int MinRows = 3;
-static const int MinCols = 3;
-/* smallest map possible is
- * +-+
- * |@|
- * +-+
- */
-
 /**************** local function prototypes ****************/
 /* not visible outside this file */
 static grid_t* grid_allocate(const int nrows, const int ncols);
