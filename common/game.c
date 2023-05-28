@@ -11,7 +11,7 @@
 #include <string.h>
 #include "grid.h"
 #include "player.h"
-#include "hashtable.h"
+#include "roster.h"
 #include "../support/message.h"
 
 /**************** file-local global variables ****************/
@@ -25,18 +25,13 @@ static const int GoldMaxNumPiles = 30; // maximum number of gold piles
 /**************** global types ****************/
 
 typedef struct game {
-    hashtable_t* players;       // holds char* playerID to player_t* player
+    roster_t* players;       // holds char* playerID to player_t* player
     int numbPlayers;
     addr_t spectator;
     grid_t* fullMap;
     // may need a gold map here
     int remainingGold;
 } game_t;
-
-typedef struct findPlayer {         // for find player
-    addr_t matchAddress;
-    player_t* foundPlayer;
-} findPlayer_t;
 
 /**************** functions ****************/
 
@@ -45,7 +40,7 @@ game_t* game_new(char* mapFileName) {
     game_t* game = malloc(sizeof(game_t));
     if (game == NULL) return NULL;
 
-    game->players = hashtable_new(MaxPlayers);
+    game->players = roster_new();
     if (game->players == NULL) return NULL;
 
     game->fullMap = grid_fromFile(mapFileName);
@@ -57,36 +52,17 @@ game_t* game_new(char* mapFileName) {
     return game;
 }
 
-// void game_setGold(game_t* game) {
+void game_setGold(game_t* game) {
 
-//     int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
+    // int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
     
-//     // Initialize the game by dropping
-//     // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
-//     // each pile shall have a random number of nuggets.
+    // Initialize the game by dropping
+    // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
+    // each pile shall have a random number of nuggets.
 
-// }
+}
 
-// /* find player */
-
-// player_t* game_getPlayerFromAddr(game_t* game, addr_t addr) {
-
-//     findPlayer_t* playerInfoPack = malloc(sizeof(findPlayer_t));
-//     player_t* findThisPlayer;
-//     playerInfoPack->matchAddress = addr;
-//     playerInfoPack->foundPlayer = findThisPlayer;
-//     hashtable_iterate(game->players, playerInfoPack, game_getPlayerFromAddr_Helper);
-//     return findThisPlayer;
-
-// }
-
-// void* game_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
-//     findPlayer_t* playerInfoPack = arg;         // cast to info pack
-//     player_t* currentPlayer = item;             // cast to player
-//     if (message_eqAddr(player_getAddr(currentPlayer), playerInfoPack->matchAddress)) {
-//         playerInfoPack->foundPlayer = currentPlayer;
-//     }
-// }
+/* receive input */
 
 void game_addSpectator(game_t* game, addr_t newSpectator) {
     if (message_isAddr(newSpectator)) {
@@ -96,8 +72,6 @@ void game_addSpectator(game_t* game, addr_t newSpectator) {
         game->spectator = newSpectator;
     }
 }
-
-/* receive input */
 
 void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
@@ -116,23 +90,24 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
         return;
     }
 
+    game->numbPlayers += 1;
+
     message_send(playerAddr, "OK");
 
-    // // Create new player and send OK message
-    // player_t* newPlayer = player_new();
-    // player_setAddress(newPlayer, playerAddr);
-    // char* setName = malloc(MaxNameLength);      // need to be free'd in player_delete
-    // strncpy(setName, playerName, MaxNameLength);
-    // player_setName(newPlayer, setName);
+    // Create new player and send OK message
+    player_t* newPlayer = player_new();
+    player_setAddress(newPlayer, playerAddr);
+    char* setName = malloc(MaxNameLength);      // need to be free'd in player_delete
+    strncpy(setName, playerName, MaxNameLength);
+    player_setName(newPlayer, setName);
+    roster_addPlayer(game->players, newPlayer);
 
-    // free(cmd);
-    // free(playerName);
+    free(cmd);
+    free(playerName);
 
-    // game->numbPlayers += 1;
-
-    // char* sendOKmessage = malloc(strlen(10));
-    // sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
-    // message_send(playerAddr, sendOKmessage);
+    char* sendOKmessage = malloc(10);
+    sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
+    message_send(playerAddr, sendOKmessage);
 
     // // Send information to client
 
@@ -154,30 +129,87 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 /* key press helper functions */
 
 void game_Q_quitGame(game_t* game, addr_t player, const char* message) {
-    message_send(player, "Q key received.");
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "QUIT Thanks for watching!");
+        game->spectator = message_noAddr();
+        return;
+    }
+
+    game->numbPlayers -= 1;
+    message_send(player, "QUIT Thanks for playing!");
+    
 }
 void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "h key received.");
 }
 void game_l_moveRight(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "l key received.");
 }
 void game_j_moveDown(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "j key received.");
 }
 void game_k_moveUp(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "k key received.");
 }
 void game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "y key received.");
 }
 void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "u key received.");
 }
 void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "b key received.");
 }
 void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR: Invalid key.");
+        return;
+    }
+
     message_send(player, "n key received.");
 }
 
@@ -211,6 +243,8 @@ void game_keyPress(game_t* game, addr_t player, const char* message) {
         case 'n':
             game_n_moveDiagDownRight(game, player, message);
             break;
+        default:
+            message_send(player, "ERROR: Invalid key.");
     }
 
 }

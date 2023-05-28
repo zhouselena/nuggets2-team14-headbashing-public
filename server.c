@@ -137,11 +137,10 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
     }
     else if (strncmp(message, "KEY", strlen("KEY")) == 0) {
         message_send(from, "KEY command received.");                // for debugging, delete later
-        game_keyPress(game, from, message);                  // key press
+        game_keyPress(game, from, message);                         // key press
     }
     else if (strncmp(message, "QUIT", strlen("QUIT")) == 0) {       // for debugging, delete this!
         message_send(from, "Server is quitting.");
-        message_done();
         return true;
     }
     else {

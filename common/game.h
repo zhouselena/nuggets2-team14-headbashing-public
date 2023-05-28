@@ -18,7 +18,6 @@
 
 /**************** global types ****************/
 typedef struct game game_t;
-typedef struct findPlayer findPlayer_t;
 
 /**************** functions ****************/
 
