@@ -102,8 +102,6 @@ void initializeGame(char* mapFileName) {
         exit(3);
     }
 
-    // game_setGold(game);
-
 }
 
 /* handleInput:
@@ -128,20 +126,13 @@ bool handleInput (void *arg) {
  */
 bool handleMessage(void* arg, const addr_t from, const char* message) {
     if (strncmp(message, "PLAY", strlen("PLAY")) == 0) {
-        message_send(from, "PLAY command received.");               // for debugging, delete later
         game_addPlayer(game, from, message);                        // new player
     }
     else if (strncmp(message, "SPECTATE", strlen("SPECTATE")) == 0) {
-        message_send(from, "SPECTATE command received.");           // for debugging, delete later
         game_addSpectator(game, from);                              // new spectator
     }
     else if (strncmp(message, "KEY", strlen("KEY")) == 0) {
-        message_send(from, "KEY command received.");                // for debugging, delete later
         game_keyPress(game, from, message);                         // key press
-    }
-    else if (strncmp(message, "QUIT", strlen("QUIT")) == 0) {       // for debugging, delete this!
-        message_send(from, "Server is quitting.");
-        return true;
     }
     else {
         message_send(from, "Command not recognized.");
