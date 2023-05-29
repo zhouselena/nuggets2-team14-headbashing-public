@@ -143,7 +143,11 @@ void grid_delete(grid_t* grid);
 
 bool grid_isSpot(const grid_t* grid, const int r, const int c);
 /* Return true iff the given gridpoint is a "spot", that is,
- * it is either a room spot or a passage spot.
+ * it is either a room spot or a passage spot or a gold spot.
+ */
+
+bool grid_isGold(const grid_t* grid, const int r, const int c);
+/* Return true iff the given gridpoint is a "gold spot".
  */
 
 bool grid_isRoomSpot(const grid_t* grid, const int r, const int c);

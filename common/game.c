@@ -234,6 +234,12 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
     }
 
     message_send(player, "h key received.");
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+    int playerRow = player_getYLocation(calledPlayer);
+    int playerCol = player_getXLocation(calledPlayer);
+    char moveTo = grid_get(game->fullMap, playerRow, playerCol);
+    
+
     // note: when player XY is changed, call player update visibility
     /* Check what the next location char is
      * If is wall or corner, do nothing
