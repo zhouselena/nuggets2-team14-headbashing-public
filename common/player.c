@@ -25,7 +25,7 @@ typedef struct player {
     int playerXLocation;            // player location x value
     int playerYLocation;            // player location y value
     int numGold;                    // player wallet
-    grid_t* visibleMap;             // player's visible map
+    grid_t* visibleMap;             // player's visible map **REMEMBER THAT YOUR OWN LOCATION SHOULD BE @**
 } player_t;
 
 /**************** functions ****************/
