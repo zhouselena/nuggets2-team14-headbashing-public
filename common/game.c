@@ -76,9 +76,10 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
         return;
     }
     message_send(player, "DISPLAY ");
+    // When sending your visible map, updates your location with the @ symbol
 }
 
-// Call roster_updateAllPlayers with their visible map, calls sendDisplay to spectator
+// Call roster_updateAllPlayers with the latest fullMap, calls sendDisplay to spectator
 // void game_updateAllUsers(game_t* game) {
 
 // }
