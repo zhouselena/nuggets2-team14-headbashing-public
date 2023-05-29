@@ -46,8 +46,19 @@ bool roster_addPlayer(roster_t* roster, player_t* player) {
 
 // Given the full map, edits what already exists in the visible map
 // then sends display command to player giving their specific visibility map and replacing their playerID with @
-void roster_updateAllPlayers(grid_t* fullMap) {
-    
+void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
+    grid_t* fullMap = arg;
+    player_t* currentPlayer = item;
+    player_serverMapUpdate(currentPlayer, fullMap);
+
+    const char* gridString = grid_string(player_getMap(currentPlayer));
+    char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+    sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
+    message_send(player_getAddr(currentPlayer), sendDisplayMsg);
+    free(sendDisplayMsg);
+}
+void roster_updateAllPlayers(roster_t* roster, grid_t* fullMap) {
+    set_iterate(roster->players, fullMap, roster_updateAllPlayers_Helper);
 }
 
 /* find player helpers */
@@ -63,6 +74,7 @@ void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
 player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchAddress = playerAddr;
+    playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromAddr_Helper);
     return playerPack->foundPlayer;
 }
@@ -78,6 +90,7 @@ void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item) {
 player_t* roster_getPlayerFromID(roster_t* roster, char playerID) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchPlayerID = playerID;
+    playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromID_Helper);
     return playerPack->foundPlayer;
 }
