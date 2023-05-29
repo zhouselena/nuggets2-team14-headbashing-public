@@ -258,8 +258,18 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
         game_updateAllUsers(game);
 
     } else if (isalpha(moveTo)) {           // is another player then swap
-        message_send(player, "ERROR another player is here\n");
-        return;
+        player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        grid_set(game->fullMap, playerRow, newPlayerCol+1, moveTo);                    // reset spot on map
+        grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
+        // update player
+        player_moveLeftAndRight(calledPlayer, -1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap);
+        // update conflicting player
+        player_moveLeftAndRight(conflictingPlayer, 1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_updateVisibility(conflictingPlayer, game->fullMap);
+        // update all
+        game_updateAllUsers(game);
+
     } else {
         return;
     }
