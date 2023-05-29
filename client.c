@@ -16,11 +16,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ncurses.h>
-#include "mem.h"
+#include "common/mem.h"
 #include <unistd.h>
-#include "message.h"
-#include "grid.h"
-#include "player.h"
+#include "support/message.h"
+#include "common/grid.h"
+#include "common/player.h"
 
 /**************** global integer ****************/
 #define MAX_PLAYER_NAME_LENGTH 50
@@ -33,6 +33,8 @@ typedef struct clientInfo {
     const char* playerID;
     addr_t serverAddr;
     WINDOW* clientwindow;
+    int curX;  
+    int curY;
 } clientInfo_t;
 
 /**************** global variables ****************/
@@ -84,18 +86,19 @@ static void parseArgs(const int argc, char* argv[]) {
 }
 
 void initializeDisplay() {
-    //Start ncurses mode 
-    initscr();
+    //Start ncurses mode; create windoe
+    WINDOW* newwin = initscr();
+    clientInfo->clientwindow = newwin;
 
     // Allow keyboard mapping and don't display the key press 
     raw();
     noecho();
 
     //Create window for displaying the game
-    clientInfo->clientwindow = newwin(NR + 1, NC + 1, 0, 0);
     start_color();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
     attron(COLOR_PAIR(1));
+    getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
 
     if (clientInfo->isPlayer) {
         mvprintw(0, 0, "Player %s has 0 nuggets (211 nuggets unclaimed).", clientInfo->playername);
@@ -172,8 +175,10 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     else if (strncmp(message, "GRID", strlen("GRID ")) == 0) {
         int nrows, ncols;
         sscanf(message, "GRID %d %d", &nrows, &ncols);
-        if (nrows > NR || ncols > NC) {
-            fprintf(stderr, "Error: Display is not large enough for the grid. Please resize.\n");
+        if (clientInfo->curX < (nrows+1) || clientInfo->curY < (ncols+1)) {
+            mvprintw(0,0,"Error: Display is not large enough for the grid. Please resize.\n");
+            getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
+            move(0,0);
             return false;
         }
     }
