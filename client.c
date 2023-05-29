@@ -26,11 +26,10 @@
 
 /**************** global integer ****************/
 #define MAX_PLAYER_NAME_LENGTH 50
-#define MaxNameLength 100 // adjust this to your maximum allowed length
 #define MAX_MSG_SIZE 1024
 
 /**************** global types ****************/
-typedef struct clientInfo {
+typedef struct clientStruct {
     bool isPlayer;
     char playername[MAX_PLAYER_NAME_LENGTH];
     const char* playerID;
@@ -38,10 +37,10 @@ typedef struct clientInfo {
     WINDOW* clientwindow;
     int curX;  
     int curY;
-} clientInfo_t;
+} clientStruct_t;
 
 /**************** global variables ****************/
-clientInfo_t* clientInfo;
+clientStruct_t* clientStruct;
 char* playMessage;
 
 /**************** global functions ****************/
@@ -57,14 +56,14 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 
 /**************** main ****************/
 int main(const int argc, char* argv[]) {
-    clientInfo = calloc(1, sizeof(clientInfo_t));
-    if (!clientInfo) {
+    clientStruct = calloc(1, sizeof(clientStruct_t));
+    if (!clientStruct) {
         fprintf(stderr, "Memory allocation failed.\n");
         exit(1);
     }       
     parseArgs(argc, argv);
     initializeDisplay();
-    initializeNetwork(argv[1], argv[2], stderr, clientInfo->isPlayer ? clientInfo->playername : NULL);
+    initializeNetwork(argv[1], argv[2], stderr, clientStruct->isPlayer ? clientStruct->playername : NULL);
     exit(0);
 }
 
@@ -78,12 +77,12 @@ static void parseArgs(const int argc, char* argv[]) {
     }
     else {
         if (argc == 4) {
-            clientInfo->isPlayer = true;
-            strncpy(clientInfo->playername, argv[3], MAX_PLAYER_NAME_LENGTH - 1);
-            clientInfo->playername[MAX_PLAYER_NAME_LENGTH - 1] = '\0';
+            clientStruct->isPlayer = true;
+            strncpy(clientStruct->playername, argv[3], MAX_PLAYER_NAME_LENGTH - 1);
+            clientStruct->playername[MAX_PLAYER_NAME_LENGTH - 1] = '\0';
         }
         else {
-            clientInfo->isPlayer = false;
+            clientStruct->isPlayer = false;
         }
     }
 }
@@ -91,7 +90,7 @@ static void parseArgs(const int argc, char* argv[]) {
 void initializeDisplay() {
     //Start ncurses mode; create windoe
     WINDOW* newwin = initscr();
-    clientInfo->clientwindow = newwin;
+    clientStruct->clientwindow = newwin;
 
     // Allow keyboard mapping and don't display the key press 
     raw();
@@ -101,7 +100,7 @@ void initializeDisplay() {
     start_color();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
+    getmaxyx(clientStruct->clientwindow, clientStruct->curX, clientStruct->curY);
     
     // // Refresh the screen to display changes
     refresh();
@@ -116,37 +115,25 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     }
 
     // if name is NULL or empty, client is a spectator. Otherwise, player
-    if (playerName == NULL || *playerName == '\0') {
-        sprintf(playMessage, "SPECTATE");
+    if (playerName == NULL) {
+        sprintf(playMessage, "SPECTATE"); //construct spectate message
     }
     else {
-        // Check name length
-        size_t nameLen = strlen(playerName);
-        if (nameLen > MaxNameLength) {
-            playerName[MaxNameLength] = '\0'; // truncate to MaxNameLength characters
-        }
-
-        // Replace invalid characters
-        for (int i = 0; playerName[i] != '\0'; i++) {
-            if (!isgraph(playerName[i]) && !isblank(playerName[i])) {
-                playerName[i] = '_'; // replace with underscore
-            }
-        }
-
         sprintf(playMessage, "PLAY %s", playerName); //construct play message
     }
+
 
     //Convert port to string
     char portStr[10];
     sprintf(portStr, "%d", atoi(port));
     fprintf(stderr, "Got: %s\n", portStr);
 
-    if (!message_setAddr(server, portStr, &(clientInfo->serverAddr))) {
+    if (!message_setAddr(server, portStr, &(clientStruct->serverAddr))) {
         fprintf(stderr, "Error: Invalid hostname or port number.\n");
         exit(4);
     }
 
-    if (!message_isAddr(clientInfo->serverAddr)) {
+    if (!message_isAddr(clientStruct->serverAddr)) {
         fprintf(stderr, "Error: Failed to setup server address.\n");
         exit(5);
     }
@@ -159,17 +146,21 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     }
 
     // Join the server
-    message_send(clientInfo->serverAddr, playMessage);
+    message_send(clientStruct->serverAddr, playMessage);
 
     // Loop, waiting for input or for messages; provide callback functions.
     // We use the 'arg' parameter to carry a pointer to 'server'.
-    bool ok = message_loop(&(clientInfo->serverAddr), 0, NULL, handleInput, handleMessage);
+    bool ok = message_loop(&(clientStruct->serverAddr), 0, NULL, handleInput, handleMessage);
 
     // Shut down the message module
     message_done();
     
     mem_free(playMessage);
-    return ok ? 0 : 1; 
+    if (!ok) {
+        fprintf(stderr, "Error: message_loop failed.\n");
+        // Clean up and terminate the program if necessary
+        exit(1);
+    }
 }
 
 /**************** handleMessage() ****************/
@@ -180,7 +171,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     if (strncmp(message, "OK", 2) == 0) {
         char* ID = mem_malloc(5);
         sscanf(message, "OK %s", ID);
-        clientInfo->playerID = ID;
+        clientStruct->playerID = ID;
         mem_free(ID);
     }
     // Handle GRID message
@@ -190,9 +181,12 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             fprintf(stderr, "Error: Cannot parse GRID message.\n");
             return false;
         }
-        while (clientInfo->curX < (nrows+1) || clientInfo->curY < (ncols+1)) {
+        while (clientStruct->curX < (nrows+1) || clientStruct->curY < (ncols+1)) {
             mvprintw(0,0,"Error: Display is not large enough for the grid. Please resize.\n");
-            getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
+            // Wait for the user to resize the window.
+            while (clientStruct->curX < (nrows+1) || clientStruct->curY < (ncols+1)) {
+                getmaxyx(clientStruct->clientwindow, clientStruct->curX, clientStruct->curY);
+            }
             move(0,0);
         }
     }
@@ -209,8 +203,8 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             return false;
         }
         // Update status line
-        if (clientInfo->isPlayer) {
-            mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). GOLD received: %d", clientInfo->playername, p, r, n);
+        if (clientStruct->isPlayer) {
+            mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). GOLD received: %d", clientStruct->playername, p, r, n);
         }
         else {
             mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
@@ -218,15 +212,19 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     }
     // Handle DISPLAY message
     else if (strncmp(message, "DISPLAY", 7) == 0) {
-        char* gridString = (char*)malloc(MAX_MSG_SIZE * sizeof(char));
-        if (gridString == NULL) {
-            fprintf(stderr, "Error: Out of memory.\n");
-            return false;
+        // Split the message into lines
+        char* line = strtok(message, "\n");
+        int lineNumber = 1;
+        while (line != NULL) {
+            // Skip the "DISPLAY" line
+            if (strncmp(line, "DISPLAY", 7) != 0) {
+                // Print each line of the grid
+                mvprintw(lineNumber++, 0, "%s", line);
+            }
+            // Get the next line
+            line = strtok(NULL, "\n");
         }
-        sscanf(message, "DISPLAY\n%[^\n]", gridString);
-        wprintw(clientInfo->clientwindow, "%s", gridString);
-        wrefresh(clientInfo->clientwindow);
-        free(gridString);
+        wrefresh(clientStruct->clientwindow);
     }
     // Handle QUIT message
     else if (strncmp(message, "QUIT", 4) == 0) {
@@ -240,7 +238,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         if (!quitMessage) {
             fprintf(stderr, "Error: Memory allocation for quitMessage failed.\n");
             return false;
-            }
+        }
 
         strcpy(quitMessage, message);
 
@@ -248,7 +246,9 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         printf("%s\n", quitMessageContent);
 
         mem_free(quitMessage);  // now it's safe to free quitMessage
-x    }
+        message_done();
+        return true; // Stop processing further messages
+    }
     // Handle ERROR message
     else if (strncmp(message, "ERROR", 5) == 0) {
         char errorMsg[MAX_MSG_SIZE];
@@ -260,8 +260,8 @@ x    }
         char errorMsg[MAX_MSG_SIZE];
         sscanf(message, "%[^\n]", errorMsg);
         fprintf(stderr, "Unknown message: %s\n", errorMsg);
-        if (clientInfo->isPlayer) {
-            mvprintw(0, 0, "Player %s has unknown keystroke", clientInfo->playername);
+        if (clientStruct->isPlayer) {
+            mvprintw(0, 0, "Player %s has unknown keystroke", clientStruct->playername);
         }
         else {
             mvprintw(0, 0, "Spectator: unknown keystroke");
@@ -271,41 +271,28 @@ x    }
 }
 
 static bool handleInput(void* arg) {
-    addr_t* serverp = arg;
+    char* keySend = mem_malloc(10);
+    char* keyChar = arg;
 
-    if (serverp == NULL) {
-        fprintf(stderr, "handleInput called with arg=NULL");
-        return true;
-    }
-
-    if (!message_isAddr(*serverp)) {
-        fprintf(stderr, "handleInput called without a correspondent.");
-        return true;
-    }
-
-    // allocate a buffer into which we can read a line of input
-    char line[message_MaxBytes];
-
-    // read a line from stdin
-    if (fgets(line, message_MaxBytes, stdin) == NULL) {
-        // EOF case: stop looping
-        return true;
-    } else {
-        // strip trailing newline
-        const int len = strlen(line);
-        if (len > 0 && line[len-1] == '\n') {
-            line[len-1] = '\0';
+    if(sscanf(keyChar, "%c", keySend) == 1){
+        sprintf(keySend, "KEY %s", keyChar);
+        message_send(clientStruct->serverAddr, keySend);
+        if(*keySend == 'Q' || *keySend == 'q'){  // Check if Q/q is pressed
+            mem_free(keySend);
+            delwin(clientStruct->clientwindow);  // Delete the window
+            endwin();  // End ncurses mode
+            exit(0);  // This will close the program when Q is pressed
         }
-
-        // construct the key message
-        char keyMessage[message_MaxBytes];
-        sprintf(keyMessage, "KEY %s", line);
-
-        // send as message to server
-        message_send(*serverp, keyMessage);
-
-        // normal case: keep looping
+        mem_free(keySend);
+        return true;
+    }
+    else{
+        message_send(clientStruct->serverAddr, "KEY Q");
+        mem_free(keySend);
         return false;
     }
+
+    clrtoeol();
 }
+
 
