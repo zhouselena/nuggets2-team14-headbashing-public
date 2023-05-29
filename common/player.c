@@ -93,7 +93,7 @@ void player_updateVisibility(player_t* player, grid_t* fullMap) {
     // mask: fullMap
     // out: player->visibleMap
     grid_t* updatedVisible = grid_new(grid_nrows(fullMap), grid_ncols(fullMap));
-    grid_visible(fullMap, player->playerYLocation, player->playerYLocation, updatedVisible);
+    grid_visible(fullMap, player->playerYLocation, player->playerXLocation, updatedVisible);
     grid_overlay(player->visibleMap, updatedVisible, fullMap, player->visibleMap);
     grid_delete(updatedVisible);
 }
