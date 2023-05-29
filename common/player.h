@@ -29,8 +29,8 @@ void player_setAddress(player_t* player, addr_t address);
 void player_setName(player_t* player, char* name);
 void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int locationX, int locationY);
 
-void player_moveUpAndDown(player_t* player, int steps);
-void player_moveLeftAndRight(player_t* player, int steps);
+void player_moveUpAndDown(player_t* player, int steps, char resetMapSpot);
+void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot);
 void player_foundGoldNuggets(player_t* player, int numGold);
 void player_updateVisibility(player_t* player, grid_t* fullMap);
 void player_serverMapUpdate(player_t* player, grid_t* fullMap);

@@ -28,6 +28,7 @@ typedef struct game {
     roster_t* players;       // holds char* playerID to player_t* player
     int numbPlayers;
     addr_t spectator;
+    grid_t* originalMap;
     grid_t* fullMap;
     int mapRows;
     int mapCols;
@@ -106,6 +107,7 @@ game_t* game_new(char* mapFileName) {
 
     game->fullMap = grid_fromFile(mapFileName);
     if (game->fullMap == NULL) return NULL;
+    game->originalMap = grid_fromFile(mapFileName);
     game->mapRows = grid_nrows(game->fullMap);
     game->mapCols = grid_ncols(game->fullMap);
 
