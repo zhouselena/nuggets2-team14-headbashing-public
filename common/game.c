@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "grid.h"
 #include "player.h"
 #include "roster.h"
@@ -233,16 +234,39 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
         return;
     }
 
-    message_send(player, "h key received.");
+    // set up player
     player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // make sure not out of bound
     int playerRow = player_getYLocation(calledPlayer);
-    int playerCol = player_getXLocation(calledPlayer);
-    char moveTo = grid_get(game->fullMap, playerRow, playerCol);
-    
+    int newPlayerCol = player_getXLocation(calledPlayer)-1;
+    if (newPlayerCol < 0) return;
+
+    // check what the next space is
+    char moveFrom = grid_get(game->originalMap, playerRow, newPlayerCol+1);
+    char moveTo = grid_get(game->fullMap, playerRow, newPlayerCol);
+    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
+        
+        // if gold, send gold update to all clients
+        if (moveTo == GRID_GOLD) {
+
+        }
+        grid_set(game->fullMap, playerRow, newPlayerCol+1, moveFrom);                    // reset spot on map
+        grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
+        player_moveLeftAndRight(calledPlayer, -1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap);
+        game_updateAllUsers(game);
+
+    } else if (isalpha(moveTo)) {           // is another player then swap
+        message_send(player, "ERROR another player is here\n");
+        return;
+    } else {
+        return;
+    }
 
     // note: when player XY is changed, call player update visibility
     /* Check what the next location char is
-     * If is wall or corner, do nothing
+     * If is wall or corner or empty, do nothing
      * else
      *      if is valid empty spot
      *          update player XY

@@ -97,6 +97,7 @@ void player_updateVisibility(player_t* player, grid_t* fullMap) {
     grid_overlay(player->visibleMap, updatedVisible, fullMap, player->visibleMap);
     grid_delete(updatedVisible);
 }
+
 void player_serverMapUpdate(player_t* player, grid_t* fullMap) {
     // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
     // base: player->visibleMap
