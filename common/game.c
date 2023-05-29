@@ -166,7 +166,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      *      Change spot in full grid to playerID
      *      Update player XY
      *      Update player visible grid
-     * NEED FUNCTION THAT UPDATES ALL PLAYERS AND SPECTATOR (sends display)
+     * game_updateAllUsers
      */
 
     // Send 'OK playerID'
@@ -204,6 +204,24 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
     }
 
     message_send(player, "h key received.");
+    /* Check what the next location char is
+     * If is wall or corner, do nothing
+     * else
+     *      if is valid empty spot
+     *          update player XY
+     *          update player visible map
+     *      if is other player, swap spots
+     *          update player XY
+     *          get other player from findplayerID, update other place XY
+     *      if is gold
+     *          update player XY
+     *          update player gold coin
+     *          update global coin count
+     *          send gold update to all users
+     *          
+     *      ALL: update FullMap with player icon
+     *           game_updateAllUsers 
+     */
 }
 void game_l_moveRight(game_t* game, addr_t player, const char* message) {
 

@@ -32,6 +32,7 @@ void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int
 void player_moveUpAndDown(player_t* player, int steps);
 void player_moveLeftAndRight(player_t* player, int steps);
 void player_foundGoldNuggets(player_t* player, int numGold);
+void player_updateVisibility(player_t* player, grid_t* newArea);
 
 addr_t player_getAddr(player_t* player);
 char player_getID(player_t* player);
