@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../support/message.h"
+#include "grid.h"
 
 /**************** file-local global variables ****************/
 
@@ -24,7 +25,7 @@ typedef struct player {
     int playerXLocation;            // player location x value
     int playerYLocation;            // player location y value
     int numGold;                    // player wallet
-    // add vision stuff here as required
+    grid_t* visibleMap;
 } player_t;
 
 /**************** functions ****************/

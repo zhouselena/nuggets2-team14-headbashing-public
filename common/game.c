@@ -33,6 +33,36 @@ typedef struct game {
     int remainingGold;
 } game_t;
 
+/**************** helper functions ****************/
+
+void game_setGold(game_t* game) {
+
+    // int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
+    
+    // Initialize the game by dropping
+    // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
+    // each pile shall have a random number of nuggets.
+
+}
+
+void game_sendGridMessage(game_t* game, addr_t player) {
+    char* sendGridMessage = malloc(10);
+    sprintf(sendGridMessage, "GRID %d %d", grid_nrows(game->fullMap), grid_ncols(game->fullMap));
+    message_send(player, sendGridMessage);
+    free(sendGridMessage);
+}
+
+void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
+    char* sendGoldMsg = malloc(20);
+    sprintf(sendGoldMsg, "GOLD %d %d %d", n, p, game->remainingGold);
+    message_send(player, sendGoldMsg);
+    free(sendGoldMsg);
+}
+
+void game_sendDisplayMessage(game_t* game, addr_t player) {
+    message_send(player, "DISPLAY ");
+}
+
 /**************** functions ****************/
 
 game_t* game_new(char* mapFileName) {
@@ -49,17 +79,9 @@ game_t* game_new(char* mapFileName) {
     game->remainingGold = GoldTotal;
     game->numbPlayers = 0;
 
+    game_setGold(game);
+
     return game;
-}
-
-void game_setGold(game_t* game) {
-
-    // int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
-    
-    // Initialize the game by dropping
-    // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
-    // each pile shall have a random number of nuggets.
-
 }
 
 /* receive input */
@@ -70,6 +92,9 @@ void game_addSpectator(game_t* game, addr_t newSpectator) {
             message_send(game->spectator, "QUIT You have been replaced by a new spectator.");
         }
         game->spectator = newSpectator;
+        game_sendGridMessage(game, newSpectator);
+        game_sendGoldMessage(game, newSpectator, 0, 0);
+        game_sendDisplayMessage(game, newSpectator);
     }
 }
 
@@ -113,23 +138,14 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     char* sendOKmessage = malloc(10);
     sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
     message_send(playerAddr, sendOKmessage);
-
-    // // Send information to client
-
-    // /* 
-    //  * GRID nrows ncols
-    //  */
-
-    // game_sendDisplayMessage(game, playerAddr);
+    free(sendOKmessage);
+    
+    // Send information to client (GRID, GOLD, DISPLAY)
+    game_sendGridMessage(game, playerAddr);
+    game_sendGoldMessage(game, playerAddr, 0, 0);
+    game_sendDisplayMessage(game, playerAddr);
 
 }
-
-// void game_sendDisplayMessage(game_t* game, addr_t player) {
-//     /* 
-//      * GOLD n p r
-//      * DISPLAY\nstring
-//      */
-// }
 
 /* key press helper functions */
 
@@ -142,6 +158,7 @@ void game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     }
 
     game->numbPlayers -= 1;
+    // replace their position with a dot again
     message_send(player, "QUIT Thanks for playing!");
     
 }
@@ -217,6 +234,8 @@ void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
 
     message_send(player, "n key received.");
 }
+
+/* key press */
 
 void game_keyPress(game_t* game, addr_t player, const char* message) {
 
