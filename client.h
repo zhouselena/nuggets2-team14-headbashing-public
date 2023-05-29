@@ -17,7 +17,8 @@
 #include "mem.h"
 #include <unistd.h>
 
-/**************** hashtable_new ****************/
+
+/**************** main ****************/
 /* Create a new (empty) hashtable.
  *
  * Caller provides:
@@ -29,7 +30,7 @@
  * Caller is responsible for:
  *   later calling hashtable_delete.
  */
-hashtable_t* hashtable_new(const int num_slots);
+int main(const int argc, char* argv[]);
 
 /**************** hashtable_insert ****************/
 /* Insert item, identified by key (string), into the given hashtable.
@@ -45,4 +46,75 @@ hashtable_t* hashtable_new(const int num_slots);
  *   later deallocating that memory; thus, the caller is free to re-use or 
  *   deallocate its key string after this call.  
  */
-bool hashtable_insert(hashtable_t* ht, const char* key, void* item);
+static void parseArgs(const int argc, char* argv[]);
+
+/**************** main ****************/
+/* Create a new (empty) hashtable.
+ *
+ * Caller provides:
+ *   number of slots to be used for the hashtable (must be > 0).
+ * We return:
+ *   pointer to the new hashtable; return NULL if error.
+ * We guarantee:
+ *   hashtable is initialized empty.
+ * Caller is responsible for:
+ *   later calling hashtable_delete.
+ */
+void initializeDisplay();
+
+/**************** main ****************/
+/* Create a new (empty) hashtable.
+ *
+ * Caller provides:
+ *   number of slots to be used for the hashtable (must be > 0).
+ * We return:
+ *   pointer to the new hashtable; return NULL if error.
+ * We guarantee:
+ *   hashtable is initialized empty.
+ * Caller is responsible for:
+ *   later calling hashtable_delete.
+ */
+void initializeNetwork(char* serverHost, char* port, FILE* errorFile, char* playerName);
+
+/**************** main ****************/
+/* Create a new (empty) hashtable.
+ *
+ * Caller provides:
+ *   number of slots to be used for the hashtable (must be > 0).
+ * We return:
+ *   pointer to the new hashtable; return NULL if error.
+ * We guarantee:
+ *   hashtable is initialized empty.
+ * Caller is responsible for:
+ *   later calling hashtable_delete.
+ */
+static bool handleInput(void* arg);
+
+/**************** main ****************/
+/* Create a new (empty) hashtable.
+ *
+ * Caller provides:
+ *   number of slots to be used for the hashtable (must be > 0).
+ * We return:
+ *   pointer to the new hashtable; return NULL if error.
+ * We guarantee:
+ *   hashtable is initialized empty.
+ * Caller is responsible for:
+ *   later calling hashtable_delete.
+ */
+static bool handleMessage(void* arg, const addr_t incoming, const char* message);
+
+/**************** main ****************/
+/* Create a new (empty) hashtable.
+ *
+ * Caller provides:
+ *   number of slots to be used for the hashtable (must be > 0).
+ * We return:
+ *   pointer to the new hashtable; return NULL if error.
+ * We guarantee:
+ *   hashtable is initialized empty.
+ * Caller is responsible for:
+ *   later calling hashtable_delete.
+ */
+void quitClient(const char* reason);
+

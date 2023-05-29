@@ -4,7 +4,7 @@
 
 C = ./common
 S = ./support
-LIBS =
+LIBS = -lncurses
 LLIBS = $C/common.a $S/support.a
 
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS)
@@ -16,13 +16,18 @@ server: server.o $(LLIBS)
 
 server.o: $C/grid.h $C/player.h $C/game.h $S/message.h
 
+client: client.o $(LLIBS)
+	$(CC) $(CFLAGS) $^ -lm $(LIBS) -o $@ -lncurses
+
+client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
+
 .PHONY: all clean
 
 ############## default: make all libs and programs ##########
 all: 
 	make -C common
 	server
-# 	make -C client
+	client
 
 ############### TAGS for emacs users ##########
 TAGS:  Makefile */Makefile */*.c */*.h */*.md */*.sh
@@ -33,4 +38,4 @@ clean:
 	rm -f *~
 	rm -f TAGS
 	make -C common clean
-#	make -C client clean
+	make -C client clean

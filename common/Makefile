@@ -5,7 +5,7 @@
 #
 # Selena Zhou, Kyla Widodo 23S
 
-OBJS = game.o player.o set.o grid.o roster.o 
+OBJS = game.o player.o set.o grid.o roster.o mem.o
 LIB = common.a
 S = ../support
 LLIBS = $S/support.a
@@ -23,6 +23,7 @@ grid.o: grid.h $S/message.h
 player.o: player.h
 roster.o: roster.h $S/message.h player.h set.h
 set.o: set.h
+mem.o: mem.h
 
 .PHONY: all clean
 
