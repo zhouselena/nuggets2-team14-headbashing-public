@@ -278,7 +278,8 @@ grid_isSpot(const grid_t* grid, const int r, const int c)
 {
   return grid == NULL ? false :
        CELL(grid, r, c) == GRID_ROOM_SPOT
-    || CELL(grid, r, c) == GRID_PASS_SPOT;
+    || CELL(grid, r, c) == GRID_PASS_SPOT
+    || CELL(grid, r, c) == GRID_GOLD;
 }
 
 /**************** grid_isRoomSpot ****************/
@@ -289,6 +290,16 @@ grid_isRoomSpot(const grid_t* grid, const int r, const int c)
 {
   return grid == NULL ? false :
     CELL(grid, r, c) == GRID_ROOM_SPOT;
+}
+
+/**************** grid_isGold ****************/
+/* see grid.h for detailed interface description */
+/* is point r,c a spot? */
+bool
+grid_isGold(const grid_t* grid, const int r, const int c)
+{
+  return grid == NULL ? false :
+    CELL(grid, r, c) == GRID_GOLD;
 }
 
 /**************** grid_isBlank ****************/

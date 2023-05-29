@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "grid.h"
 #include "player.h"
 #include "roster.h"
@@ -28,7 +29,10 @@ typedef struct game {
     roster_t* players;       // holds char* playerID to player_t* player
     int numbPlayers;
     addr_t spectator;
+    grid_t* originalMap;
     grid_t* fullMap;
+    int mapRows;
+    int mapCols;
     int remainingGold;
 } game_t;
 
@@ -53,7 +57,7 @@ void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
 
 void game_sendGridMessage(game_t* game, addr_t player) {
     char* sendGridMessage = malloc(10);
-    sprintf(sendGridMessage, "GRID %d %d", grid_nrows(game->fullMap), grid_ncols(game->fullMap));
+    sprintf(sendGridMessage, "GRID %d %d", game->mapRows, game->mapCols);
     message_send(player, sendGridMessage);
     free(sendGridMessage);
 }
@@ -75,14 +79,22 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
         free(sendDisplayMsg);
         return;
     }
-    message_send(player, "DISPLAY\n");
+    player_t* playerToUpdate = roster_getPlayerFromAddr(game->players, player);
+    const char* gridString = grid_string(player_getMap(playerToUpdate));
+    char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+    sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
+    message_send(player, sendDisplayMsg);
+    free(sendDisplayMsg);
     // When sending your visible map, updates your location with the @ symbol
 }
 
-// Call roster_updateAllPlayers with the latest fullMap, calls sendDisplay to spectator
-// void game_updateAllUsers(game_t* game) {
-
-// }
+// Call roster_updateAllPlayers to send latest DISPLAY, calls sendDisplay to spectator
+void game_updateAllUsers(game_t* game) {
+    if (message_isAddr(game->spectator)) {
+        game_sendDisplayMessage(game, game->spectator);
+    }
+    roster_updateAllPlayers(game->players, game->fullMap);
+}
 
 /**************** functions ****************/
 
@@ -96,6 +108,9 @@ game_t* game_new(char* mapFileName) {
 
     game->fullMap = grid_fromFile(mapFileName);
     if (game->fullMap == NULL) return NULL;
+    game->originalMap = grid_fromFile(mapFileName);
+    game->mapRows = grid_nrows(game->fullMap);
+    game->mapCols = grid_ncols(game->fullMap);
 
     game->remainingGold = GoldTotal;
     game->numbPlayers = 0;
@@ -169,6 +184,17 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      *      Update player visible grid
      * game_updateAllUsers
      */
+    int playerX = rand() % game->mapCols;
+    int playerY = rand() % game->mapRows;
+    while(!grid_isRoomSpot(game->fullMap, playerY, playerX)) {
+        playerX = rand() % game->mapCols;
+        playerY = rand() % game->mapRows;
+    }
+    grid_set(game->fullMap, playerY, playerX, player_getID(newPlayer));
+    grid_t* playerVisibleGrid = grid_new(game->mapRows, game->mapCols);
+    grid_visible(game->fullMap, playerY, playerX, playerVisibleGrid);
+    grid_set(playerVisibleGrid, playerY, playerX, GRID_PLAYER_ME);
+    player_initializeGridAndLocation(newPlayer, playerVisibleGrid, playerX, playerY);
 
     // Send 'OK playerID'
     game_sendOKMessage(newPlayer, playerAddr);
@@ -177,6 +203,8 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     game_sendGridMessage(game, playerAddr);
     game_sendGoldMessage(game, playerAddr, 0, 0);
     game_sendDisplayMessage(game, playerAddr);
+
+    game_updateAllUsers(game);
 
 }
 
@@ -191,10 +219,12 @@ void game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     }
 
     game->numbPlayers -= 1;
-    // replace their position with a dot again
+    
     player_t* freePlayer = roster_getPlayerFromAddr(game->players, player);
+    grid_set(game->fullMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer), grid_get(game->originalMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer)));
     player_setAddress(freePlayer, message_noAddr());
     message_send(player, "QUIT Thanks for playing!");
+    game_updateAllUsers(game);
     
 }
 void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
@@ -204,9 +234,39 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
         return;
     }
 
-    message_send(player, "h key received.");
+    // set up player
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // make sure not out of bound
+    int playerRow = player_getYLocation(calledPlayer);
+    int newPlayerCol = player_getXLocation(calledPlayer)-1;
+    if (newPlayerCol < 0) return;
+
+    // check what the next space is
+    char moveFrom = grid_get(game->originalMap, playerRow, newPlayerCol+1);
+    char moveTo = grid_get(game->fullMap, playerRow, newPlayerCol);
+    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
+        
+        // if gold, send gold update to all clients
+        if (moveTo == GRID_GOLD) {
+
+        }
+        grid_set(game->fullMap, playerRow, newPlayerCol+1, moveFrom);                    // reset spot on map
+        grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
+        player_moveLeftAndRight(calledPlayer, -1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap);
+        game_updateAllUsers(game);
+
+    } else if (isalpha(moveTo)) {           // is another player then swap
+        message_send(player, "ERROR another player is here\n");
+        return;
+    } else {
+        return;
+    }
+
+    // note: when player XY is changed, call player update visibility
     /* Check what the next location char is
-     * If is wall or corner, do nothing
+     * If is wall or corner or empty, do nothing
      * else
      *      if is valid empty spot
      *          update player XY

@@ -73,10 +73,40 @@ void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int
 
 /* update functions */
 
-void player_moveUpAndDown(player_t* player, int steps);
-void player_moveLeftAndRight(player_t* player, int steps);
+void player_moveUpAndDown(player_t* player, int steps, char resetMapSpot) {
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, resetMapSpot);
+    player->playerYLocation += steps;
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+}
+void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot) {
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, resetMapSpot);
+    player->playerXLocation += steps;
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+}
 void player_foundGoldNuggets(player_t* player, int numGold);
-void player_updateVisibility(player_t* player, grid_t* newArea);
+
+// called after player x and y are updated
+void player_updateVisibility(player_t* player, grid_t* fullMap) {
+    // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
+    // base: player->visibleMap
+    // overlay: grid_visible()
+    // mask: fullMap
+    // out: player->visibleMap
+    grid_t* updatedVisible = grid_new(grid_nrows(fullMap), grid_ncols(fullMap));
+    grid_visible(fullMap, player->playerYLocation, player->playerYLocation, updatedVisible);
+    grid_overlay(player->visibleMap, updatedVisible, fullMap, player->visibleMap);
+    grid_delete(updatedVisible);
+}
+
+void player_serverMapUpdate(player_t* player, grid_t* fullMap) {
+    // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
+    // base: player->visibleMap
+    // overlay: fullMap
+    // mask: player->visibleMap
+    // out: player->visibleMap
+    grid_overlay(player->visibleMap, fullMap, player->visibleMap, player->visibleMap);
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+}
 
 /* getter functions */
 
@@ -98,6 +128,10 @@ int player_getXLocation(player_t* player) {
 
 int player_getYLocation(player_t* player) {
     return player->playerYLocation;
+}
+
+grid_t* player_getMap(player_t* player) {
+    return player->visibleMap;
 }
 
 int player_getGold(player_t* player) {
