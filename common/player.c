@@ -25,7 +25,7 @@ typedef struct player {
     int playerXLocation;            // player location x value
     int playerYLocation;            // player location y value
     int numGold;                    // player wallet
-    grid_t* visibleMap;
+    grid_t* visibleMap;             // player's visible map
 } player_t;
 
 /**************** functions ****************/
@@ -45,8 +45,6 @@ player_t* player_new() {
     nextPlayer += 1;
     // start player purse with 0
     player->numGold = 0;
-    // TODO: playerXLocation
-    // TODO: playerYLocation
 
     return player;
 
@@ -65,6 +63,12 @@ void player_setAddress(player_t* player, addr_t address) {
 
 void player_setName(player_t* player, char* name) {
     player->playerName = name;
+}
+
+void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int locationX, int locationY) {
+    player->visibleMap = visibleGrid;
+    player->playerXLocation = locationX;
+    player->playerYLocation = locationY;
 }
 
 /* update functions */

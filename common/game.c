@@ -29,7 +29,6 @@ typedef struct game {
     int numbPlayers;
     addr_t spectator;
     grid_t* fullMap;
-    // may need a gold map here
     int remainingGold;
 } game_t;
 
@@ -43,6 +42,13 @@ void game_setGold(game_t* game) {
     // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
     // each pile shall have a random number of nuggets.
 
+}
+
+void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
+    char* sendOKmessage = malloc(10);
+    sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
+    message_send(playerAddr, sendOKmessage);
+    free(sendOKmessage);
 }
 
 void game_sendGridMessage(game_t* game, addr_t player) {
@@ -59,9 +65,23 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     free(sendGoldMsg);
 }
 
+// If player is spectator, sends full map, otherwise sends player's visible map
 void game_sendDisplayMessage(game_t* game, addr_t player) {
+    if (message_eqAddr(game->spectator, player)) {
+        const char* gridString = grid_string(game->fullMap);
+        char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+        sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
+        message_send(player, sendDisplayMsg);
+        free(sendDisplayMsg);
+        return;
+    }
     message_send(player, "DISPLAY ");
 }
+
+// Call roster_updateAllPlayers with their visible map, calls sendDisplay to spectator
+// void game_updateAllUsers(game_t* game) {
+
+// }
 
 /**************** functions ****************/
 
@@ -88,6 +108,13 @@ game_t* game_new(char* mapFileName) {
 
 void game_addSpectator(game_t* game, addr_t newSpectator) {
     if (message_isAddr(newSpectator)) {
+
+        // Make sure spectator isn't a player already
+        if (roster_getPlayerFromAddr(game->players, newSpectator) != NULL) {
+            message_send(newSpectator, "ERROR You are already a player.");
+            return;
+        }
+
         if (message_isAddr(game->spectator)) {
             message_send(game->spectator, "QUIT You have been replaced by a new spectator.");
         }
@@ -108,7 +135,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
     // Send ERROR if Spectator sends
     if (message_eqAddr(game->spectator, playerAddr)) {
-        message_send(playerAddr, "ERROR: Invalid key for spectator.");
+        message_send(playerAddr, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -124,21 +151,26 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
     game->numbPlayers += 1;
 
-    // Create new player and send OK message
+    // Create new player
     player_t* newPlayer = player_new();
     player_setAddress(newPlayer, playerAddr);
     char* setName = malloc(MaxNameLength);      // need to be free'd in player_delete
     strncpy(setName, playerName, MaxNameLength);
     player_setName(newPlayer, setName);
     roster_addPlayer(game->players, newPlayer);
-
     free(cmd);
     free(playerName);
 
-    char* sendOKmessage = malloc(10);
-    sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
-    message_send(playerAddr, sendOKmessage);
-    free(sendOKmessage);
+    /* Initialize player location
+     * Randomly go through full grid, if it's an empty space then
+     *      Change spot in full grid to playerID
+     *      Update player XY
+     *      Update player visible grid
+     * NEED FUNCTION THAT UPDATES ALL PLAYERS AND SPECTATOR (sends display)
+     */
+
+    // Send 'OK playerID'
+    game_sendOKMessage(newPlayer, playerAddr);
     
     // Send information to client (GRID, GOLD, DISPLAY)
     game_sendGridMessage(game, playerAddr);
@@ -159,13 +191,15 @@ void game_Q_quitGame(game_t* game, addr_t player, const char* message) {
 
     game->numbPlayers -= 1;
     // replace their position with a dot again
+    player_t* freePlayer = roster_getPlayerFromAddr(game->players, player);
+    player_setAddress(freePlayer, message_noAddr());
     message_send(player, "QUIT Thanks for playing!");
     
 }
 void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key.");
+        message_send(player, "ERROR Invalid key.");
         return;
     }
 
@@ -174,7 +208,7 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 void game_l_moveRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -183,7 +217,7 @@ void game_l_moveRight(game_t* game, addr_t player, const char* message) {
 void game_j_moveDown(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -192,7 +226,7 @@ void game_j_moveDown(game_t* game, addr_t player, const char* message) {
 void game_k_moveUp(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -201,7 +235,7 @@ void game_k_moveUp(game_t* game, addr_t player, const char* message) {
 void game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -210,7 +244,7 @@ void game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -219,7 +253,7 @@ void game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -228,7 +262,7 @@ void game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR: Invalid key for spectator.");
+        message_send(player, "ERROR Invalid key for spectator.");
         return;
     }
 
@@ -238,6 +272,12 @@ void game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
 /* key press */
 
 void game_keyPress(game_t* game, addr_t player, const char* message) {
+
+    player_t* currPlayer = roster_getPlayerFromAddr(game->players, player);
+    if (!message_eqAddr(game->spectator, player) && (currPlayer == NULL)) {
+        message_send(player, "ERROR Please start PLAY or SPECTATE first.");
+        return;
+    }
 
     switch(message[4]) {        // message is in format "KEY k"
         case 'Q':
@@ -268,7 +308,7 @@ void game_keyPress(game_t* game, addr_t player, const char* message) {
             game_n_moveDiagDownRight(game, player, message);
             break;
         default:
-            message_send(player, "ERROR: Invalid key.");
+            message_send(player, "ERROR Invalid key.");
     }
 
 }
