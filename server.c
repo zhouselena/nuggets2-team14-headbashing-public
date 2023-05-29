@@ -90,6 +90,10 @@ game_t* initializeGame(char* mapFileName) {
 
 }
 
+bool handleInput(void *arg) {
+    return feof(stdin);
+}
+
 bool handleMessage(void* arg) {
 
     char* message = arg;    // cast to string

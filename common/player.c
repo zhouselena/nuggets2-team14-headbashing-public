@@ -9,10 +9,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "grid.h"
+#include "player.h"
+
 
 /**************** file-local global variables ****************/
 
 static char nextPlayer = 'A';
+static int playerNum = 0;
 
 /**************** global types ****************/
 typedef struct player {
@@ -21,14 +25,15 @@ typedef struct player {
     int playerXLocation;            // player location x value
     int playerYLocation;            // player location y value
     int numGold;                    // player wallet
-    // add vision stuff here as required
+    addr_t playerAddress;           // player's address for networking purposes
+// add vision stuff here as required
 } player_t;
 
 /**************** functions ****************/
 
 /* create and delete */
 
-player_t* player_new(char* name) {
+player_t* player_new(char* name, int x, int y, addr_t address) {
     
     player_t* player = malloc(sizeof(player_t));
 
@@ -37,47 +42,86 @@ player_t* player_new(char* name) {
     }
 
     // give player a unique ID
-    player->playerID = nextPlayer;
-    nextPlayer += 1;
+    player->playerID = nextPlayer + playerNum;
+    playerNum += 1;
 
-    player->playerName = name;
+    player->playerName = strdup(name);  
     player->numGold = 0;
-    // TODO: playerXLocation
-    // TODO: playerYLocation
+    player->playerXLocation = x;
+    player->playerYLocation = y;
+    player->playerAddress = address;
 
     return player;
-
 }
 
 void player_delete(player_t* player) {
-    free(player);
-    // shouldn't have to delete anything else right? nothing else was malloc'd
+    if(player != NULL) {
+        free(player->playerName);
+        free(player);
+    }
 }
 
-/* update functions */
+void player_moveUpAndDown(player_t* player, int steps) {
+    if(player != NULL) {
+        player->playerYLocation += steps;
+    }
+}
 
-void player_moveUpAndDown(player_t* player, int steps);
-void player_moveLeftAndRight(player_t* player, int steps);
-void player_foundGoldNuggets(player_t* player, int numGold);
+void player_moveLeftAndRight(player_t* player, int steps) {
+    if(player != NULL) {
+        player->playerXLocation += steps;
+    }
+}
+
+void player_foundGoldNuggets(player_t* player, int addedGold){
+    if(player != NULL && addedGold > 0){
+        player->numGold += addedGold;
+    }
+}
 
 /* getter functions */
 
 char player_getID(player_t* player) {
-    return player->playerID;
+    if(player != NULL){
+        return player->playerID;
+    } 
+    else {
+        return -1;
+    }
 }
 
 char* player_getName(player_t* player) {
-    return player->playerName;
+    if(player != NULL){
+        return player->playerName;
+    } 
+    else {
+        return -1;
+    }
 }
 
 int player_getXLocation(player_t* player) {
-    return player->playerXLocation;
+    if(player != NULL){
+        return player->playerXLocation;
+    } 
+    else {
+        return -1;
+    }    
 }
 
 int player_getYLocation(player_t* player) {
-    return player->playerYLocation;
+    if(player != NULL){
+        return player->playerYLocation;
+    } 
+    else {
+        return -1;
+    }    
 }
 
 int player_getGold(player_t* player) {
-    return player->numGold;
+    if(player != NULL){
+        return player->numGold;
+    } 
+    else {
+        return -1;
+    }    
 }
