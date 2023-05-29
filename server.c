@@ -135,8 +135,7 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
         game_keyPress(game, from, message);                         // key press
     }
     else {
-        message_send(from, "Command not recognized.");
-        // log error here?
+        message_send(from, "ERROR Command not recognized.");
     }
     return false;
 }

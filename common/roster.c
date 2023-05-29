@@ -23,6 +23,7 @@ typedef struct roster {
 
 typedef struct findPlayerPack {
     addr_t matchAddress;
+    char matchPlayerID;
     player_t* foundPlayer;
 } findPlayerPack_t;
 
@@ -43,6 +44,13 @@ bool roster_addPlayer(roster_t* roster, player_t* player) {
     return set_insert(roster->players, &playerID, player);
 }
 
+// Given a display message, sends message to all players in the roster
+void roster_updateAllPlayers(char* message) {
+
+}
+
+/* find player helpers */
+
 void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
     findPlayerPack_t* playerPack = arg;
     player_t* currPlayer = item;
@@ -55,5 +63,20 @@ player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchAddress = playerAddr;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromAddr_Helper);
+    return playerPack->foundPlayer;
+}
+
+void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item) {
+    findPlayerPack_t* playerPack = arg;
+    player_t* currPlayer = item;
+    if (player_getID(currPlayer) == playerPack->matchPlayerID) {
+        playerPack->foundPlayer = currPlayer;
+    }
+}
+
+player_t* roster_getPlayerFromID(roster_t* roster, char playerID) {
+    findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
+    playerPack->matchPlayerID = playerID;
+    set_iterate(roster->players, playerPack, *roster_getPlayerFromID_Helper);
     return playerPack->foundPlayer;
 }
