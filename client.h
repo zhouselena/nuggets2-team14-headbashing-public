@@ -117,4 +117,3 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
  *   later calling hashtable_delete.
  */
 void quitClient(const char* reason);
-
