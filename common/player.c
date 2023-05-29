@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "grid.h"
-#include "player.h"
-
 
 /**************** file-local global variables ****************/
 
@@ -19,7 +16,9 @@ static char nextPlayer = 'A';
 static int playerNum = 0;
 
 /**************** global types ****************/
+
 typedef struct player {
+    addr_t playerAddress;
     char playerID;                  // unique ID starting from A, B, C...
     char* playerName;               // player real name that client inputs
     int playerXLocation;            // player location x value
@@ -33,19 +32,19 @@ typedef struct player {
 
 /* create and delete */
 
-player_t* player_new(char* name, int x, int y, addr_t address) {
+player_t* player_new(char* name) {
     
     player_t* player = malloc(sizeof(player_t));
 
-    if (player == NULL || name == NULL) {       // defensive OR memory fails to malloc
+    if (player == NULL) {       // defensive OR memory fails to malloc
         return NULL;
     }
 
     // give player a unique ID
-    player->playerID = nextPlayer + playerNum;
-    playerNum += 1;
+    player->playerID = nextPlayer;
+    nextPlayer += 1;
 
-    player->playerName = strdup(name);  
+    player->playerName = name;
     player->numGold = 0;
     player->playerXLocation = x;
     player->playerYLocation = y;
@@ -55,16 +54,8 @@ player_t* player_new(char* name, int x, int y, addr_t address) {
 }
 
 void player_delete(player_t* player) {
-    if(player != NULL) {
-        free(player->playerName);
-        free(player);
-    }
-}
-
-void player_moveUpAndDown(player_t* player, int steps) {
-    if(player != NULL) {
-        player->playerYLocation += steps;
-    }
+    free(player);
+    // shouldn't have to delete anything else right? nothing else was malloc'd
 }
 
 void player_moveLeftAndRight(player_t* player, int steps) {
@@ -80,6 +71,10 @@ void player_foundGoldNuggets(player_t* player, int addedGold){
 }
 
 /* getter functions */
+
+addr_t player_getAddr(player_t* player) {
+    return player->playerAddress;
+}
 
 char player_getID(player_t* player) {
     if(player != NULL){
@@ -118,10 +113,5 @@ int player_getYLocation(player_t* player) {
 }
 
 int player_getGold(player_t* player) {
-    if(player != NULL){
-        return player->numGold;
-    } 
-    else {
-        return -1;
-    }    
+    return player->numGold;
 }
