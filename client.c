@@ -48,7 +48,6 @@ void initializeDisplay();
 void initializeNetwork(char* serverHost, char* port, FILE* errorFile, char* playerName);
 static bool handleInput(void* arg);
 static bool handleMessage(void* arg, const addr_t incoming, const char* message);
-void quitClient(const char* reason);
 
 
 /**************** local functions ****************/
@@ -71,9 +70,6 @@ static void parseArgs(const int argc, char* argv[]) {
         exit(1);
     }
     else {
-        char* hostname = argv[1];
-        char* port = argv[2];
-
         if (argc == 4) {
             clientInfo->isPlayer = true;
             strncpy(clientInfo->playername, argv[3], MAX_PLAYER_NAME_LENGTH - 1);
@@ -129,13 +125,11 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 
     if (!message_setAddr(server, portStr, &(clientInfo->serverAddr))) {
         fprintf(stderr, "Error: Invalid hostname or port number.\n");
-        quitClient("Hostname or Portnumber invalid");
         exit(2);
     }
 
     if (!message_isAddr(clientInfo->serverAddr)) {
         fprintf(stderr, "Error: Failed to setup server address.\n");
-        quitClient("Connection failed");
         exit(3);
     }
 
@@ -155,7 +149,6 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
         exit(5);
     }
 
-    message_done();
     mem_free(playMessage);
 }
 
@@ -165,14 +158,14 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
  */
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
     //Handle OK message 
-    if (strncmp(message, "OK", strlen("OK ")) == 0) {
+    if (strncmp(message, "OK", 2) == 0) {
         char* ID = mem_malloc(5);
         sscanf(message, "OK %s", ID);
         clientInfo->playerID = ID;
         mem_free(ID);
     }
     // Handle GRID message
-    else if (strncmp(message, "GRID", strlen("GRID ")) == 0) {
+    else if (strncmp(message, "GRID", 4) == 0) {
         int nrows, ncols;
         sscanf(message, "GRID %d %d", &nrows, &ncols);
         if (clientInfo->curX < (nrows+1) || clientInfo->curY < (ncols+1)) {
@@ -183,12 +176,17 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         }
     }
     // Handle GOLD message
-    else if (strncmp(message, "GOLD", strlen("GOLD ")) == 0) {
+    else if (strncmp(message, "GOLD", 4) == 0) {
         int n; //inform player it has collected n nuggets
         int p; // purse has p gold nugs
         int r; // r gold left to be found
-        sscanf(message, "GOLD %d %d %d", &n, &p, &r);
+        int args = sscanf(message, "GOLD %d %d %d", &n, &p, &r);
 
+        // Check number of args
+        if (args != 3) {
+            fprintf(stderr, "ERROR: invalid number of arguments passed\n");
+            return false;
+        }
         // Update status line
         if (clientInfo->isPlayer) {
             mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). GOLD received: %d", clientInfo->playername, p, r, n);
@@ -198,7 +196,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         }
     }
     // Handle DISPLAY message
-    else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY ")) == 0) {
+    else if (strncmp(message, "DISPLAY\n", 8) == 0) {
         char* gridString = (char*)malloc(MAX_MSG_SIZE * sizeof(char));
         if (gridString == NULL) {
             fprintf(stderr, "Error: Out of memory.\n");
@@ -209,16 +207,56 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         wrefresh(clientInfo->clientwindow);
         free(gridString);
     }
+    // Handle DISPLAY message
+    // else if (strncmp(message, "DISPLAY\n", 8) == 0) {
+    //     char* gridString = (char*)malloc(MAX_MSG_SIZE * sizeof(char));
+    //     if (gridString == NULL) {
+    //         fprintf(stderr, "Error: Out of memory.\n");
+    //         return false;
+    //     }
+    //     sscanf(message, "DISPLAY\n%[^\n]", gridString);
+
+    //     // Clear the window for new grid
+    //     wclear(clientInfo->clientwindow);
+
+    //     // New functionality to replicate the display function
+    //     if (gridString == NULL) {
+    //         fprintf(stderr, "displayGrid(): NULL 'grid' passed\n");
+    //         free(gridString);
+    //         return false;
+    //     }
+
+    //     // Add new grid to display
+    //     int i = 0;
+    //     int x = 1;
+    //     int y = 0;
+    //     while (gridString[i] != '\0') {
+    //         if (gridString[i] == '\n'){
+    //             y++;
+    //             x = 1;
+    //         } else {
+    //             mvwaddch(clientInfo->clientwindow, y, x, gridString[i]);
+    //             x++;
+    //         }
+    //         i++;
+    //     }
+
+    //     wrefresh(clientInfo->clientwindow);
+    //     free(gridString);
+    // }
     // Handle QUIT message
-    else if (strncmp(message, "QUIT", strlen("QUIT ")) == 0) {
+    else if (strncmp(message, "QUIT", 4) == 0) {
         endwin();
-        char reason[MAX_MSG_SIZE];
-        sscanf(message, "QUIT %[^\n]", reason);
-        quitClient(reason);
-        return false;
+        char* quitMessage = mem_malloc(strlen(message));
+        strcpy(quitMessage, message);
+        quitMessage = quitMessage + strlen("QUIT ");
+        printf("%s\n", quitMessage);
+        mem_free(quitMessage);
+        message_done();
+
     }
     // Handle ERROR message
-    else if (strncmp(message, "ERROR", strlen("ERROR ")) == 0) {
+    else if (strncmp(message, "ERROR", 5) == 0) {
         char errorMsg[MAX_MSG_SIZE];
         sscanf(message, "ERROR %[^\n]", errorMsg);
         fprintf(stderr, "Error: %s\n", errorMsg);
@@ -235,47 +273,31 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             mvprintw(0, 0, "Spectator: unknown keystroke");
         }
     }
-    refresh();
-    return true;
+    return false;
 }
 
 
 bool handleInput(void* arg){
-    int key = getch(); // ncurses call to get the key press
+    int key = getch();
 
     if(arg == NULL) {
         fprintf(stderr, "Error: Invalid keyboard input.\n");
-        return false;
+        return true;
     }
 
     char* keyMessage = mem_malloc(10);
     
-    if (key == 'Q' || key == EOF){
-        sprintf(keyMessage, "KEY Q");
+    if(key != 'Q'){ // Condition to check if key is not equal to 'Q'
+        sprintf(keyMessage, "KEY %c", key);
         message_send(clientInfo->serverAddr, keyMessage);
-        quitClient("User quit the game."); // quit game if reach EOF or 'Q' on stdin
-    }
-    else if(clientInfo->isPlayer){
-        if (strchr("hljkyubnHLJKYUBN", key)){
-            sprintf(keyMessage, "KEY %c", key);
-            message_send(clientInfo->serverAddr, keyMessage);
-        }
-        else{
-            fprintf(stderr, "Error: Invalid player keystroke.\n");
-            return false;
-        }
-    }
-    else{
-        fprintf(stderr, "Invalid spectator keystroke.\n");
+        mem_free(keyMessage);
         return false;
     }
+    else {
+        message_send(clientInfo->serverAddr, "KEY Q");
+        mem_free(keyMessage);
+        return true;
+    }
 
-    mem_free(keyMessage);
-    return true;
-}
-
-void quitClient(const char* reason){
-    fprintf(stderr, "Game Over: %s\n", reason);
-    mem_free(clientInfo);
-    exit(0);
+    clrtoeol();
 }
