@@ -26,8 +26,8 @@ client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 ############## default: make all libs and programs ##########
 all: 
 	make -C common
-	server
-	client
+	make server
+	make client
 
 ############### TAGS for emacs users ##########
 TAGS:  Makefile */Makefile */*.c */*.h */*.md */*.sh
@@ -37,5 +37,4 @@ TAGS:  Makefile */Makefile */*.c */*.h */*.md */*.sh
 clean:
 	rm -f *~
 	rm -f TAGS
-	make -C common clean
-	make -C client clean
+#	make -C common clean

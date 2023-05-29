@@ -21,9 +21,12 @@
 #include "support/message.h"
 #include "common/grid.h"
 #include "common/player.h"
+#include <ctype.h> // needed for isgraph() and isblank()
+
 
 /**************** global integer ****************/
 #define MAX_PLAYER_NAME_LENGTH 50
+#define MaxNameLength 100 // adjust this to your maximum allowed length
 #define MAX_MSG_SIZE 1024
 
 /**************** global types ****************/
@@ -54,7 +57,11 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 
 /**************** main ****************/
 int main(const int argc, char* argv[]) {
-    clientInfo = calloc(1, sizeof(clientInfo_t));  // allocating memory for clientInfo
+    clientInfo = calloc(1, sizeof(clientInfo_t));
+    if (!clientInfo) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        exit(1);
+    }       
     parseArgs(argc, argv);
     initializeDisplay();
     initializeNetwork(argv[1], argv[2], stderr, clientInfo->isPlayer ? clientInfo->playername : NULL);
@@ -67,7 +74,7 @@ int main(const int argc, char* argv[]) {
 static void parseArgs(const int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "Invalid arguments; Usage: ./client hostname port [player_name]\n");
-        exit(1);
+        exit(2);
     }
     else {
         if (argc == 4) {
@@ -95,26 +102,37 @@ void initializeDisplay() {
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
     attron(COLOR_PAIR(1));
     getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
-
-    if (clientInfo->isPlayer) {
-        mvprintw(0, 0, "Player %s has 0 nuggets (211 nuggets unclaimed).", clientInfo->playername);
-    } else {
-        mvprintw(0, 0, "Spectator: 211 nuggets unclaimed.");
-    }
     
-    // Refresh the screen to display changes
+    // // Refresh the screen to display changes
     refresh();
 }
 
 void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerName) {
     // For the client to server message
-    playMessage = mem_malloc_assert(message_MaxBytes, "initializeNetwork(): Memory Message");
+    char* playMessage = (char*)malloc(message_MaxBytes * sizeof(char));
+    if (playMessage == NULL) {
+        fprintf(stderr, "initializeNetwork(): Memory Message\n");
+        exit(3);
+    }
 
-    // if name is NULL, client is a spectator. Otherwise, player
-    if (playerName == NULL) {
-        sprintf(playMessage, "SPECTATE"); //construct spectate message
+    // if name is NULL or empty, client is a spectator. Otherwise, player
+    if (playerName == NULL || *playerName == '\0') {
+        sprintf(playMessage, "SPECTATE");
     }
     else {
+        // Check name length
+        size_t nameLen = strlen(playerName);
+        if (nameLen > MaxNameLength) {
+            playerName[MaxNameLength] = '\0'; // truncate to MaxNameLength characters
+        }
+
+        // Replace invalid characters
+        for (int i = 0; playerName[i] != '\0'; i++) {
+            if (!isgraph(playerName[i]) && !isblank(playerName[i])) {
+                playerName[i] = '_'; // replace with underscore
+            }
+        }
+
         sprintf(playMessage, "PLAY %s", playerName); //construct play message
     }
 
@@ -125,33 +143,34 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 
     if (!message_setAddr(server, portStr, &(clientInfo->serverAddr))) {
         fprintf(stderr, "Error: Invalid hostname or port number.\n");
-        exit(2);
+        exit(4);
     }
 
     if (!message_isAddr(clientInfo->serverAddr)) {
         fprintf(stderr, "Error: Failed to setup server address.\n");
-        exit(3);
+        exit(5);
     }
 
     // Initializes the message server
     if (message_init(errorFile) == 0) {
         // error occurred while initializing the client's connection
         fprintf(stderr, "Error: Unable to initialize client connection\n");
-        exit(4);
+        exit(6);
     }
 
     // Join the server
     message_send(clientInfo->serverAddr, playMessage);
 
-    // Handle input messages and loops until error occurs or exit is responsible for the bulk of server communication, handles input messages,
-    if (!message_loop(NULL, 0, NULL, handleInput, handleMessage)) {
-        fprintf(stderr, "Error: Failure while looping.\n");
-        exit(5);
-    }
+    // Loop, waiting for input or for messages; provide callback functions.
+    // We use the 'arg' parameter to carry a pointer to 'server'.
+    bool ok = message_loop(&(clientInfo->serverAddr), 0, NULL, handleInput, handleMessage);
 
+    // Shut down the message module
+    message_done();
+    
     mem_free(playMessage);
+    return ok ? 0 : 1; 
 }
-
 
 /**************** handleMessage() ****************/
 /* 
@@ -167,12 +186,14 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     // Handle GRID message
     else if (strncmp(message, "GRID", 4) == 0) {
         int nrows, ncols;
-        sscanf(message, "GRID %d %d", &nrows, &ncols);
-        if (clientInfo->curX < (nrows+1) || clientInfo->curY < (ncols+1)) {
+        if(sscanf(message, "GRID %d %d", &nrows, &ncols) != 2) {
+            fprintf(stderr, "Error: Cannot parse GRID message.\n");
+            return false;
+        }
+        while (clientInfo->curX < (nrows+1) || clientInfo->curY < (ncols+1)) {
             mvprintw(0,0,"Error: Display is not large enough for the grid. Please resize.\n");
             getmaxyx(clientInfo->clientwindow, clientInfo->curX, clientInfo->curY);
             move(0,0);
-            return false;
         }
     }
     // Handle GOLD message
@@ -196,7 +217,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         }
     }
     // Handle DISPLAY message
-    else if (strncmp(message, "DISPLAY\n", 8) == 0) {
+    else if (strncmp(message, "DISPLAY", 7) == 0) {
         char* gridString = (char*)malloc(MAX_MSG_SIZE * sizeof(char));
         if (gridString == NULL) {
             fprintf(stderr, "Error: Out of memory.\n");
@@ -207,54 +228,27 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         wrefresh(clientInfo->clientwindow);
         free(gridString);
     }
-    // Handle DISPLAY message
-    // else if (strncmp(message, "DISPLAY\n", 8) == 0) {
-    //     char* gridString = (char*)malloc(MAX_MSG_SIZE * sizeof(char));
-    //     if (gridString == NULL) {
-    //         fprintf(stderr, "Error: Out of memory.\n");
-    //         return false;
-    //     }
-    //     sscanf(message, "DISPLAY\n%[^\n]", gridString);
-
-    //     // Clear the window for new grid
-    //     wclear(clientInfo->clientwindow);
-
-    //     // New functionality to replicate the display function
-    //     if (gridString == NULL) {
-    //         fprintf(stderr, "displayGrid(): NULL 'grid' passed\n");
-    //         free(gridString);
-    //         return false;
-    //     }
-
-    //     // Add new grid to display
-    //     int i = 0;
-    //     int x = 1;
-    //     int y = 0;
-    //     while (gridString[i] != '\0') {
-    //         if (gridString[i] == '\n'){
-    //             y++;
-    //             x = 1;
-    //         } else {
-    //             mvwaddch(clientInfo->clientwindow, y, x, gridString[i]);
-    //             x++;
-    //         }
-    //         i++;
-    //     }
-
-    //     wrefresh(clientInfo->clientwindow);
-    //     free(gridString);
-    // }
     // Handle QUIT message
     else if (strncmp(message, "QUIT", 4) == 0) {
         endwin();
-        char* quitMessage = mem_malloc(strlen(message));
-        strcpy(quitMessage, message);
-        quitMessage = quitMessage + strlen("QUIT ");
-        printf("%s\n", quitMessage);
-        mem_free(quitMessage);
-        message_done();
+        if (strlen(message) < strlen("QUIT ")) {
+            fprintf(stderr, "Error: QUIT message is too short.\n");
+            return false;
+            }
 
-    }
+        char* quitMessage = mem_malloc(strlen(message) + 1);  // +1 for the null-terminator
+        if (!quitMessage) {
+            fprintf(stderr, "Error: Memory allocation for quitMessage failed.\n");
+            return false;
+            }
+
+        strcpy(quitMessage, message);
+
+        char* quitMessageContent = quitMessage + strlen("QUIT ");
+        printf("%s\n", quitMessageContent);
+
+        mem_free(quitMessage);  // now it's safe to free quitMessage
+x    }
     // Handle ERROR message
     else if (strncmp(message, "ERROR", 5) == 0) {
         char errorMsg[MAX_MSG_SIZE];
@@ -276,28 +270,42 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     return false;
 }
 
+static bool handleInput(void* arg) {
+    addr_t* serverp = arg;
 
-bool handleInput(void* arg){
-    int key = getch();
-
-    if(arg == NULL) {
-        fprintf(stderr, "Error: Invalid keyboard input.\n");
+    if (serverp == NULL) {
+        fprintf(stderr, "handleInput called with arg=NULL");
         return true;
     }
 
-    char* keyMessage = mem_malloc(10);
-    
-    if(key != 'Q'){ // Condition to check if key is not equal to 'Q'
-        sprintf(keyMessage, "KEY %c", key);
-        message_send(clientInfo->serverAddr, keyMessage);
-        mem_free(keyMessage);
+    if (!message_isAddr(*serverp)) {
+        fprintf(stderr, "handleInput called without a correspondent.");
+        return true;
+    }
+
+    // allocate a buffer into which we can read a line of input
+    char line[message_MaxBytes];
+
+    // read a line from stdin
+    if (fgets(line, message_MaxBytes, stdin) == NULL) {
+        // EOF case: stop looping
+        return true;
+    } else {
+        // strip trailing newline
+        const int len = strlen(line);
+        if (len > 0 && line[len-1] == '\n') {
+            line[len-1] = '\0';
+        }
+
+        // construct the key message
+        char keyMessage[message_MaxBytes];
+        sprintf(keyMessage, "KEY %s", line);
+
+        // send as message to server
+        message_send(*serverp, keyMessage);
+
+        // normal case: keep looping
         return false;
     }
-    else {
-        message_send(clientInfo->serverAddr, "KEY Q");
-        mem_free(keyMessage);
-        return true;
-    }
-
-    clrtoeol();
 }
+
