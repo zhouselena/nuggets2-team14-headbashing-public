@@ -63,6 +63,7 @@ void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
 player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchAddress = playerAddr;
+    playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromAddr_Helper);
     return playerPack->foundPlayer;
 }
@@ -78,6 +79,7 @@ void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item) {
 player_t* roster_getPlayerFromID(roster_t* roster, char playerID) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchPlayerID = playerID;
+    playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromID_Helper);
     return playerPack->foundPlayer;
 }

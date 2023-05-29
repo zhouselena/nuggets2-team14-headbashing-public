@@ -29,6 +29,8 @@ typedef struct game {
     int numbPlayers;
     addr_t spectator;
     grid_t* fullMap;
+    int mapRows;
+    int mapCols;
     int remainingGold;
 } game_t;
 
@@ -53,7 +55,7 @@ void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
 
 void game_sendGridMessage(game_t* game, addr_t player) {
     char* sendGridMessage = malloc(10);
-    sprintf(sendGridMessage, "GRID %d %d", grid_nrows(game->fullMap), grid_ncols(game->fullMap));
+    sprintf(sendGridMessage, "GRID %d %d", game->mapRows, game->mapCols);
     message_send(player, sendGridMessage);
     free(sendGridMessage);
 }
@@ -75,7 +77,12 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
         free(sendDisplayMsg);
         return;
     }
-    message_send(player, "DISPLAY\n");
+    player_t* playerToUpdate = roster_getPlayerFromAddr(game->players, player);
+    const char* gridString = grid_string(player_getMap(playerToUpdate));
+    char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+    sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
+    message_send(player, sendDisplayMsg);
+    free(sendDisplayMsg);
     // When sending your visible map, updates your location with the @ symbol
 }
 
@@ -96,6 +103,8 @@ game_t* game_new(char* mapFileName) {
 
     game->fullMap = grid_fromFile(mapFileName);
     if (game->fullMap == NULL) return NULL;
+    game->mapRows = grid_nrows(game->fullMap);
+    game->mapCols = grid_ncols(game->fullMap);
 
     game->remainingGold = GoldTotal;
     game->numbPlayers = 0;
@@ -169,6 +178,17 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      *      Update player visible grid
      * game_updateAllUsers
      */
+    int playerX = rand() % game->mapCols;
+    int playerY = rand() % game->mapRows;
+    while(!grid_isRoomSpot(game->fullMap, playerY, playerX)) {
+        playerX = rand() % game->mapCols;
+        playerY = rand() % game->mapRows;
+    }
+    grid_set(game->fullMap, playerY, playerX, player_getID(newPlayer));
+    grid_t* playerVisibleGrid = grid_new(game->mapRows, game->mapCols);
+    grid_visible(game->fullMap, playerY, playerX, playerVisibleGrid);
+    grid_set(playerVisibleGrid, playerY, playerX, GRID_PLAYER_ME);
+    player_initializeGridAndLocation(newPlayer, playerVisibleGrid, playerX, playerY);
 
     // Send 'OK playerID'
     game_sendOKMessage(newPlayer, playerAddr);

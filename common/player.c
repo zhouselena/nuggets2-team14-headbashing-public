@@ -100,6 +100,10 @@ int player_getYLocation(player_t* player) {
     return player->playerYLocation;
 }
 
+grid_t* player_getMap(player_t* player) {
+    return player->visibleMap;
+}
+
 int player_getGold(player_t* player) {
     return player->numGold;
 }

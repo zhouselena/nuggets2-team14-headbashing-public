@@ -37,6 +37,7 @@ void player_updateVisibility(player_t* player, grid_t* newArea);
 addr_t player_getAddr(player_t* player);
 char player_getID(player_t* player);
 char* player_getName(player_t* player);
+grid_t* player_getMap(player_t* player);
 int player_getXLocation(player_t* player);
 int player_getYLocation(player_t* player);
 int player_getGold(player_t* player);
