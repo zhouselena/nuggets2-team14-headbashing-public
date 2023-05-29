@@ -75,7 +75,7 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
         free(sendDisplayMsg);
         return;
     }
-    message_send(player, "DISPLAY ");
+    message_send(player, "DISPLAY\n");
     // When sending your visible map, updates your location with the @ symbol
 }
 
