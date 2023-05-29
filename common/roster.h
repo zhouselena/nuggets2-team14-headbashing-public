@@ -25,6 +25,8 @@ typedef struct findPlayerPack findPlayerPack_t;
 roster_t* roster_new();
 void roster_addPlayer(roster_t* roster, player_t* player);
 void* roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item);
-player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t* playerAddr);
+player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr);
+void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item);
+player_t* roster_getPlayerFromID(roster_t* roster, char playerID);
 
 #endif // __ROSTER_H
