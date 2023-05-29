@@ -28,3 +28,4 @@ Icon?
 # Ignore the binary file
 client
 server
+.nfs
