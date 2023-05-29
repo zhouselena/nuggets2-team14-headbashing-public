@@ -44,9 +44,10 @@ bool roster_addPlayer(roster_t* roster, player_t* player) {
     return set_insert(roster->players, &playerID, player);
 }
 
-// Given a display message, sends message to all players in the roster
-void roster_updateAllPlayers(char* message) {
-
+// Given the full map, edits what already exists in the visible map
+// then sends display command to player giving their specific visibility map and replacing their playerID with @
+void roster_updateAllPlayers(grid_t* fullMap) {
+    
 }
 
 /* find player helpers */
