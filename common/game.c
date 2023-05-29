@@ -87,7 +87,7 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
     // When sending your visible map, updates your location with the @ symbol
 }
 
-// Call roster_updateAllPlayers with the latest fullMap, calls sendDisplay to spectator
+// Call roster_updateAllPlayers to send latest DISPLAY, calls sendDisplay to spectator
 void game_updateAllUsers(game_t* game) {
     if (message_isAddr(game->spectator)) {
         game_sendDisplayMessage(game, game->spectator);
@@ -218,10 +218,12 @@ void game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     }
 
     game->numbPlayers -= 1;
-    // replace their position with a dot again
+    
     player_t* freePlayer = roster_getPlayerFromAddr(game->players, player);
+    grid_set(game->fullMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer), grid_get(game->originalMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer)));
     player_setAddress(freePlayer, message_noAddr());
     message_send(player, "QUIT Thanks for playing!");
+    game_updateAllUsers(game);
     
 }
 void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
@@ -232,6 +234,7 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
     }
 
     message_send(player, "h key received.");
+    // note: when player XY is changed, call player update visibility
     /* Check what the next location char is
      * If is wall or corner, do nothing
      * else
