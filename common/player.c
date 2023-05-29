@@ -76,7 +76,19 @@ void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int
 void player_moveUpAndDown(player_t* player, int steps);
 void player_moveLeftAndRight(player_t* player, int steps);
 void player_foundGoldNuggets(player_t* player, int numGold);
-void player_updateVisibility(player_t* player, grid_t* newArea);
+// called after player x and y are updated
+void player_updateVisibility(player_t* player, grid_t* fullMap) {
+    
+}
+void player_serverMapUpdate(player_t* player, grid_t* fullMap) {
+    // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
+    // base: player->visibleMap
+    // overlay: fullMap
+    // mask: player->visibleMap
+    // out: player->visibleMap
+    grid_overlay(player->visibleMap, fullMap, player->visibleMap, player->visibleMap);
+    grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+}
 
 /* getter functions */
 

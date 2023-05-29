@@ -87,9 +87,12 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
 }
 
 // Call roster_updateAllPlayers with the latest fullMap, calls sendDisplay to spectator
-// void game_updateAllUsers(game_t* game) {
-
-// }
+void game_updateAllUsers(game_t* game) {
+    if (message_isAddr(game->spectator)) {
+        game_sendDisplayMessage(game, game->spectator);
+    }
+    roster_updateAllPlayers(game->players, game->fullMap);
+}
 
 /**************** functions ****************/
 
@@ -197,6 +200,8 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     game_sendGridMessage(game, playerAddr);
     game_sendGoldMessage(game, playerAddr, 0, 0);
     game_sendDisplayMessage(game, playerAddr);
+
+    game_updateAllUsers(game);
 
 }
 

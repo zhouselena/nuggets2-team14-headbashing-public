@@ -46,8 +46,19 @@ bool roster_addPlayer(roster_t* roster, player_t* player) {
 
 // Given the full map, edits what already exists in the visible map
 // then sends display command to player giving their specific visibility map and replacing their playerID with @
-void roster_updateAllPlayers(grid_t* fullMap) {
-    
+void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
+    grid_t* fullMap = arg;
+    player_t* currentPlayer = item;
+    player_serverMapUpdate(currentPlayer, fullMap);
+
+    const char* gridString = grid_string(player_getMap(currentPlayer));
+    char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+    sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
+    message_send(player_getAddr(currentPlayer), sendDisplayMsg);
+    free(sendDisplayMsg);
+}
+void roster_updateAllPlayers(roster_t* roster, grid_t* fullMap) {
+    set_iterate(roster->players, fullMap, roster_updateAllPlayers_Helper);
 }
 
 /* find player helpers */
