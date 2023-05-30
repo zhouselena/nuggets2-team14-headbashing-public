@@ -11,6 +11,7 @@
 #include <string.h>
 #include "../support/message.h"
 #include "grid.h"
+#include "game.h"
 
 /**************** file-local global variables ****************/
 
@@ -25,7 +26,8 @@ typedef struct player {
     int playerXLocation;            // player location x value
     int playerYLocation;            // player location y value
     int numGold;                    // player wallet
-    grid_t* visibleMap;             // player's visible map **REMEMBER THAT YOUR OWN LOCATION SHOULD BE @**
+    grid_t* visibleMap;             // player's visible map
+    grid_t* visibleGold;            // player's visible gold
 } player_t;
 
 /**************** functions ****************/
@@ -65,10 +67,14 @@ void player_setName(player_t* player, char* name) {
     player->playerName = name;
 }
 
-void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, int locationX, int locationY) {
+void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, grid_t* goldMap, int locationX, int locationY) {
     player->visibleMap = visibleGrid;
     player->playerXLocation = locationX;
     player->playerYLocation = locationY;
+
+    grid_t* visibleGold = grid_new(grid_nrows(goldMap), grid_ncols(goldMap));
+    grid_overlay(visibleGold, goldMap, visibleGrid, visibleGold);
+    player->visibleGold = visibleGold;
 }
 
 /* update functions */
@@ -83,10 +89,12 @@ void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot) {
     player->playerXLocation += steps;
     grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
 }
-void player_foundGoldNuggets(player_t* player, int numGold);
+void player_foundGoldNuggets(player_t* player, int foundGold) {
+    player->numGold += foundGold;
+}
 
 // called after player x and y are updated
-void player_updateVisibility(player_t* player, grid_t* fullMap) {
+void player_updateVisibility(player_t* player, grid_t* fullMap, grid_t* goldMap) {
     // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
     // base: player->visibleMap
     // overlay: grid_visible()
@@ -94,18 +102,30 @@ void player_updateVisibility(player_t* player, grid_t* fullMap) {
     // out: player->visibleMap
     grid_t* updatedVisible = grid_new(grid_nrows(fullMap), grid_ncols(fullMap));
     grid_visible(fullMap, player->playerYLocation, player->playerXLocation, updatedVisible);
+    grid_set(updatedVisible, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
     grid_overlay(player->visibleMap, updatedVisible, fullMap, player->visibleMap);
+
+    grid_t* visibleGold = grid_new(grid_nrows(fullMap), grid_ncols(fullMap));
+    grid_overlay(visibleGold, goldMap, updatedVisible, visibleGold);
+    grid_delete(player->visibleGold);
+    player->visibleGold = visibleGold;
+    
     grid_delete(updatedVisible);
 }
 
-void player_serverMapUpdate(player_t* player, grid_t* fullMap) {
+void player_serverMapUpdate(player_t* player, game_t* game) {
     // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
     // base: player->visibleMap
     // overlay: fullMap
     // mask: player->visibleMap
     // out: player->visibleMap
-    grid_overlay(player->visibleMap, fullMap, player->visibleMap, player->visibleMap);
+    grid_overlay(player->visibleMap, game_returnFullMap(game), player->visibleMap, player->visibleMap);
     grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+    
+    grid_t* visibleGold = grid_new(grid_nrows(game_returnFullMap(game)), grid_ncols(game_returnFullMap(game)));
+    grid_overlay(visibleGold, game_returnGoldMap(game), player->visibleGold, visibleGold);
+    grid_delete(player->visibleGold);
+    player->visibleGold = visibleGold;
 }
 
 /* getter functions */
@@ -132,6 +152,10 @@ int player_getYLocation(player_t* player) {
 
 grid_t* player_getMap(player_t* player) {
     return player->visibleMap;
+}
+
+grid_t* player_getVisibleGold(player_t* player) {
+    return player->visibleGold;
 }
 
 int player_getGold(player_t* player) {
