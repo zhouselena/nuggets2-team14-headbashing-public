@@ -338,7 +338,7 @@ bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, playerRow, newPlayerCol+1);
     char moveTo = grid_get(game->fullMap, playerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, playerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, playerRow, newPlayerCol)) {
@@ -352,7 +352,7 @@ bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
-        grid_set(game->fullMap, playerRow, newPlayerCol+1, moveTo);                    // reset spot on map
+        grid_set(game->fullMap, playerRow, newPlayerCol+1, moveTo);                      // set original player spot on map to conflicting player
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         // update player
         player_moveLeftAndRight(calledPlayer, -1, moveFrom);
@@ -404,7 +404,7 @@ bool game_l_moveRight(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, playerRow, newPlayerCol-1);
     char moveTo = grid_get(game->fullMap, playerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, playerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, playerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, playerRow, newPlayerCol)) {
@@ -450,7 +450,7 @@ bool game_j_moveDown(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow-1, playerCol);
     char moveTo = grid_get(game->fullMap, newPlayerRow, playerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, playerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, playerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, playerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, playerCol)) {
@@ -497,7 +497,7 @@ bool game_k_moveUp(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow+1, playerCol);
     char moveTo = grid_get(game->fullMap, newPlayerRow, playerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, playerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, playerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, playerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, playerCol)) {
@@ -544,7 +544,7 @@ bool game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow+1, newPlayerCol+1);
     char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
@@ -596,7 +596,7 @@ bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow+1, newPlayerCol-1);
     char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
@@ -647,7 +647,7 @@ bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow-1, newPlayerCol+1);
     char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
@@ -698,7 +698,7 @@ bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
     // check what the next space is
     char moveFrom = grid_get(game->originalMap, newPlayerRow-1, newPlayerCol-1);
     char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
-    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol) && !grid_isPlayer(game->fullMap, newPlayerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
         if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
