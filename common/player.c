@@ -11,6 +11,7 @@
 #include <string.h>
 #include "../support/message.h"
 #include "grid.h"
+#include "game.h"
 
 /**************** file-local global variables ****************/
 
@@ -112,14 +113,19 @@ void player_updateVisibility(player_t* player, grid_t* fullMap, grid_t* goldMap)
     grid_delete(updatedVisible);
 }
 
-void player_serverMapUpdate(player_t* player, grid_t* fullMap) {
+void player_serverMapUpdate(player_t* player, game_t* game) {
     // grid_overlay(const grid_t* base, const grid_t* overlay, const grid_t* mask, grid_t* out)
     // base: player->visibleMap
     // overlay: fullMap
     // mask: player->visibleMap
     // out: player->visibleMap
-    grid_overlay(player->visibleMap, fullMap, player->visibleMap, player->visibleMap);
+    grid_overlay(player->visibleMap, game_returnFullMap(game), player->visibleMap, player->visibleMap);
     grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
+    
+    grid_t* visibleGold = grid_new(grid_nrows(game_returnFullMap(game)), grid_ncols(game_returnFullMap(game)));
+    grid_overlay(visibleGold, game_returnGoldMap(game), player->visibleGold, visibleGold);
+    grid_delete(player->visibleGold);
+    player->visibleGold = visibleGold;
 }
 
 /* getter functions */

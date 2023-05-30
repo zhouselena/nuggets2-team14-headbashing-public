@@ -16,6 +16,7 @@
 #include <string.h>
 #include "../support/message.h"
 #include "grid.h"
+#include "game.h"
 
 /**************** global types ****************/
 typedef struct player player_t;
@@ -33,7 +34,7 @@ void player_moveUpAndDown(player_t* player, int steps, char resetMapSpot);
 void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot);
 void player_foundGoldNuggets(player_t* player, int numGold);
 void player_updateVisibility(player_t* player, grid_t* fullMap, grid_t* goldMap);
-void player_serverMapUpdate(player_t* player, grid_t* fullMap);
+void player_serverMapUpdate(player_t* player, game_t* game);
 
 addr_t player_getAddr(player_t* player);
 char player_getID(player_t* player);

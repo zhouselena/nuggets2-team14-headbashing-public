@@ -48,9 +48,9 @@ bool roster_addPlayer(roster_t* roster, player_t* player) {
 // Given the full map, edits what already exists in the visible map
 // then sends display command to player giving their specific visibility map and replacing their playerID with @
 void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
-    grid_t* fullMap = arg;
+    game_t* game = arg;
     player_t* currentPlayer = item;
-    player_serverMapUpdate(currentPlayer, fullMap);
+    player_serverMapUpdate(currentPlayer, game);
 
     grid_t* visibleGrid = player_getMap(currentPlayer);
     grid_t* visibleGold = player_getVisibleGold(currentPlayer);
@@ -61,8 +61,22 @@ void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     message_send(player_getAddr(currentPlayer), sendDisplayMsg);
     free(sendDisplayMsg);
 }
-void roster_updateAllPlayers(roster_t* roster, grid_t* fullMap) {
-    set_iterate(roster->players, fullMap, roster_updateAllPlayers_Helper);
+void roster_updateAllPlayers(roster_t* roster, game_t* game) {
+    set_iterate(roster->players, game, roster_updateAllPlayers_Helper);
+}
+
+// Updates everyone's gold
+void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) {
+    game_t* game = arg;
+    player_t* currentPlayer = item;
+
+    char* sendGoldMsg = malloc(20);
+    sprintf(sendGoldMsg, "GOLD 0 %d %d", player_getGold(currentPlayer), game_returnRemainingGold(game));
+    message_send(player_getAddr(currentPlayer), sendGoldMsg);
+    free(sendGoldMsg);
+}
+void roster_updateAllPlayersGold(roster_t* roster, game_t* game) {
+    set_iterate(roster->players, game, roster_updateAllPlayersGold_Helper);
 }
 
 /* find player helpers */
