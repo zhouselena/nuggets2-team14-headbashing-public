@@ -62,7 +62,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message);
  */
 void game_addSpectator(game_t* game, addr_t newSpectator);
 
-/* key press helper functions */
+/* key press functions */
 
 /**************** game_Q_quitGame ****************/
 /* Called when server receives 'KEY Q' from client.
@@ -74,6 +74,17 @@ void game_addSpectator(game_t* game, addr_t newSpectator);
  * Returns: false
  */
 bool game_Q_quitGame(game_t* game, addr_t player, const char* message);
+
+/**************** game_[KEY]_move[DIRECTION] ****************/
+/* Called when server receives 'KEY [hljkyubn]' from client.
+ * If address received is the spectator, sends spectator ERROR message.
+ * Checks if player can move. If they can, then update everyone's display.
+ * If they moved to a gold point, call found gold function to update total gold count.
+ * If they move to an existing player's position, swaps the two player positions.
+ *
+ * Caller provides: valid game, player address, 'KEY' message
+ * Returns: true if found gold returns true (game over), false otherwise
+ */
 bool game_h_moveLeft(game_t* game, addr_t player, const char* message);
 bool game_l_moveRight(game_t* game, addr_t player, const char* message);
 bool game_j_moveDown(game_t* game, addr_t player, const char* message);
@@ -83,14 +94,28 @@ bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message);
 bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message);
 bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message);
 
-/* key press input */
-
+/**************** game_keyPress ****************/
+/* Called when server receives 'KEY [keystroke]' from client.
+ * Calls individual key press functions depending on keystroke, or ERROR message if invalid keystroke.
+ *
+ * Caller provides: valid game, player address, 'KEY' message
+ * Returns: true if found gold returns true (game over), false otherwise
+ */
 bool game_keyPress(game_t* game, addr_t player, const char* message);
 
 /* getters */
 
+/**************** game_returnFullMap ****************/
+/* Given valid game, returns map with all player ID's.
+ */
 grid_t* game_returnFullMap(game_t* game);
+/**************** game_returnGoldMap ****************/
+/* Given valid game, returns map with all uncollected gold locations.
+ */
 grid_t* game_returnGoldMap(game_t* game);
+/**************** game_returnRemainingGold ****************/
+/* Given valid game, returns how much gold is left.
+ */
 int game_returnRemainingGold(game_t* game);
 
 #endif // __GAME_H

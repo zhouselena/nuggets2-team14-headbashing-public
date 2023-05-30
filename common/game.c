@@ -363,7 +363,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
 }
 
-/* key press helper functions */
+/* key press functions */
 
 /**************** game_Q_quitGame ****************/
 /* see game.h for description */
@@ -387,7 +387,7 @@ bool game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     
 }
 
-/**************** game_h_moveLeft ****************/
+/**************** game_[KEY]_move[DIRECTION] ****************/
 /* see game.h for description */
 bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
@@ -801,8 +801,8 @@ bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
     return false;
 }
 
-/* key press */
-
+/**************** game_keyPress ****************/
+/* see game.h for description */
 bool game_keyPress(game_t* game, addr_t player, const char* message) {
 
     player_t* currPlayer = roster_getPlayerFromAddr(game->players, player);
@@ -837,16 +837,22 @@ bool game_keyPress(game_t* game, addr_t player, const char* message) {
 
 }
 
-/* helper getter functions */
+/* getters */
 
+/**************** game_returnFullMap ****************/
+/* see game.h for description */
 grid_t* game_returnFullMap(game_t* game) {
     return game->fullMap;
 }
 
+/**************** game_returnGoldMap ****************/
+/* see game.h for description */
 grid_t* game_returnGoldMap(game_t* game) {
     return game->goldMap;
 }
 
+/**************** game_returnRemainingGold ****************/
+/* see game.h for description */
 int game_returnRemainingGold(game_t* game) {
     return game->remainingGold;
 }
