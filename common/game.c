@@ -14,6 +14,7 @@
 #include "player.h"
 #include "roster.h"
 #include "../support/message.h"
+#include "gold.h"
 
 /**************** file-local global variables ****************/
 
@@ -31,6 +32,7 @@ typedef struct game {
     addr_t spectator;
     grid_t* originalMap;
     grid_t* fullMap;
+    gold_t* goldNuggets;
     int mapRows;
     int mapCols;
     int remainingGold;
@@ -38,13 +40,44 @@ typedef struct game {
 
 /**************** helper functions ****************/
 
+
+// Initialize the game by dropping
+// at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
+// each pile shall have a random number of nuggets.
 void game_setGold(game_t* game) {
 
-    // int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
-    
-    // Initialize the game by dropping
-    // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
-    // each pile shall have a random number of nuggets.
+    int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
+    int maxNuggetsInPile = GoldTotal - numbPiles + 1;       // max is total gold - total piles + 1, need to update max
+    int allocatedNuggets = 0;
+    game->goldNuggets = gold_new(numbPiles);
+
+    for (int i = 0; i < numbPiles; i++) {
+        // generate random location
+        int goldRow = rand() % game->mapRows;
+        int goldCol = rand() % game->mapCols;
+        while(!grid_isRoomSpot(game->fullMap, goldRow, goldCol)) {
+            goldRow = rand() % game->mapRows;
+            goldCol = rand() % game->mapCols;
+        }
+
+        int numbNuggets;
+        if (i == numbPiles-1) {     // if at last pile, allocate all remaining gold
+            numbNuggets = GoldTotal - allocatedNuggets;
+            maxNuggetsInPile = 0;
+        } else {
+            // generate random nugget number, then update max nuggets
+            numbNuggets = rand() % maxNuggetsInPile + 1;
+            allocatedNuggets += numbNuggets;
+            maxNuggetsInPile = (GoldTotal - allocatedNuggets) - (numbPiles - i) + 1;       // new max is remaining gold - remaining piles + 1
+        }
+
+        // remember pile in gold set
+        gold_addGoldPile(game->goldNuggets, goldRow, goldCol, numbNuggets);
+
+        // update grid
+        grid_set(game->fullMap, goldRow, goldCol, GRID_GOLD);
+        
+    }
 
 }
 
@@ -67,6 +100,13 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     sprintf(sendGoldMsg, "GOLD %d %d %d", n, p, game->remainingGold);
     message_send(player, sendGoldMsg);
     free(sendGoldMsg);
+}
+
+void game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
+    int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
+    game->remainingGold -= numbNuggets;
+    player_foundGoldNuggets(player, numbNuggets);
+    int purse = 
 }
 
 // If player is spectator, sends full map, otherwise sends player's visible map

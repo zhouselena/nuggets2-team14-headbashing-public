@@ -5,7 +5,7 @@
 #
 # Selena Zhou, Kyla Widodo 23S
 
-OBJS = game.o player.o set.o grid.o roster.o mem.o
+OBJS = game.o player.o set.o grid.o roster.o mem.o gold.o
 LIB = common.a
 S = ../support
 LLIBS = $S/support.a
@@ -18,10 +18,11 @@ $(LIB): $(OBJS) $(LLIBS)
 	ar cr $(LIB) -lm $(OBJS)
 
 message.o: $S/message.h
-game.o: $S/message.h grid.h player.h roster.h game.h
+game.o: $S/message.h grid.h player.h roster.h game.h gold.h
 grid.o: grid.h $S/message.h
 player.o: player.h
 roster.o: roster.h $S/message.h player.h set.h
+gold.o: gold.h set.h
 set.o: set.h
 mem.o: mem.h
 

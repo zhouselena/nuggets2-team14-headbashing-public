@@ -83,7 +83,9 @@ void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot) {
     player->playerXLocation += steps;
     grid_set(player->visibleMap, player->playerYLocation, player->playerXLocation, GRID_PLAYER_ME);
 }
-void player_foundGoldNuggets(player_t* player, int numGold);
+void player_foundGoldNuggets(player_t* player, int foundGold) {
+    player->numGold += foundGold;
+}
 
 // called after player x and y are updated
 void player_updateVisibility(player_t* player, grid_t* fullMap) {
