@@ -79,6 +79,28 @@ void roster_updateAllPlayersGold(roster_t* roster, game_t* game) {
     set_iterate(roster->players, game, roster_updateAllPlayersGold_Helper);
 }
 
+// SEND: QUIT GAME OVER:
+
+void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
+    char* message = arg;
+    fprintf(stderr, "This is initial message: %s\n", message);
+    player_t* currPlayer = item;
+    char* playerStatement = malloc(strlen(message)+100);
+    sprintf(playerStatement, "%s\n%c %7d %s", message, player_getID(currPlayer), player_getGold(currPlayer), player_getName(currPlayer));
+    fprintf(stderr, "This is created playerstatement: %s\n", playerStatement);
+    message = realloc(message, strlen(playerStatement)+2);
+    sprintf(message, "%s", playerStatement);
+    fprintf(stderr, "This is new message: %s\n", message);
+    free(playerStatement);
+}
+
+char* roster_createGameMessage(roster_t* roster) {
+    char* message = malloc(strlen("QUIT GAME OVER:"+2));
+    sprintf(message, "QUIT GAME OVER:");
+    set_iterate(roster->players, message, roster_createGameMessage_Helper);
+    return message;
+}
+
 /* find player helpers */
 
 void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {

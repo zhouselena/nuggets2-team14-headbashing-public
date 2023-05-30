@@ -114,14 +114,14 @@ void game_updateAllUsersGold(game_t* game) {
 bool game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
     int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
     game->remainingGold -= numbNuggets;
+    player_foundGoldNuggets(player, numbNuggets);
     // if game over
     if (game->remainingGold == 0) {
         end_game(game);
         return true;
     }
-    // otherwise update
+    // else update display
     grid_set(game->goldMap, goldRow, goldCol, GRID_BLANK);
-    player_foundGoldNuggets(player, numbNuggets);
     int purse = player_getGold(player);
     game_sendGoldMessage(game, player_getAddr(player), numbNuggets, purse);
     // update spectator
@@ -189,7 +189,8 @@ game_t* game_new(char* mapFileName) {
 }
 
 void end_game(game_t* game) {
-    // send all clients game over message
+    char* summary = roster_createGameMessage(game->players);
+    fprintf(stderr, "%s\n", summary);
     // free everything in game
 }
 
@@ -259,11 +260,12 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      */
     int playerX = rand() % game->mapCols;
     int playerY = rand() % game->mapRows;
-    // make sure is in valid room spot and NOT gold nugget
+    // make sure is in valid room spot
     while(!grid_isRoomSpot(game->fullMap, playerY, playerX)) {
         playerX = rand() % game->mapCols;
         playerY = rand() % game->mapRows;
     }
+    
     grid_set(game->fullMap, playerY, playerX, player_getID(newPlayer));
     grid_t* playerVisibleGrid = grid_new(game->mapRows, game->mapCols);
     grid_visible(game->fullMap, playerY, playerX, playerVisibleGrid);
@@ -274,10 +276,16 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
     // Send 'OK playerID'
     game_sendOKMessage(newPlayer, playerAddr);
+    game_sendGridMessage(game, playerAddr);
     
     // Send information to client (GRID, GOLD, DISPLAY)
-    game_sendGridMessage(game, playerAddr);
-    game_sendGoldMessage(game, playerAddr, 0, 0);
+    if (grid_get(game->goldMap, playerY, playerX) == GRID_GOLD) {
+        game_foundGold(game, newPlayer, playerY, playerX);
+        grid_set(playerVisibleGrid, playerY, playerX, GRID_PLAYER_ME);
+    } else {
+        game_sendGoldMessage(game, playerAddr, 0, 0);
+    }
+    
     game_sendDisplayMessage(game, playerAddr);
 
     game_updateAllUsers(game);

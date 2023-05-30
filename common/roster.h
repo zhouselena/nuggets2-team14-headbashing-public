@@ -29,6 +29,9 @@ void roster_updateAllPlayers(roster_t* roster, game_t* fullMap);
 void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item);
 void roster_updateAllPlayersGold(roster_t* roster, game_t* fullMap);
 
+void roster_createGameMessage_Helper(void* arg, const char* key, void* item);
+char* roster_createGameMessage(roster_t* roster);
+
 void* roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item);
 player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr);
 void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item);
