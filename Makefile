@@ -43,6 +43,6 @@ clean:
 	rm -f *~
 	rm -f TAGS
 	rm -f *.log
-	rm -f *.nfs
+	rm -f .nfs*
 
 #	make -C common clean
