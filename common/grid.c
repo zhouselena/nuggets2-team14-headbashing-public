@@ -289,7 +289,8 @@ bool
 grid_isRoomSpot(const grid_t* grid, const int r, const int c)
 {
   return grid == NULL ? false :
-    CELL(grid, r, c) == GRID_ROOM_SPOT;
+    CELL(grid, r, c) == GRID_ROOM_SPOT ||
+    CELL(grid, r, c) == GRID_GOLD;
 }
 
 /**************** grid_isGold ****************/

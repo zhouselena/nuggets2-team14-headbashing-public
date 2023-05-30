@@ -12,6 +12,7 @@
 #include "player.h"
 #include "set.h"
 #include "../support/message.h"
+#include "game.h"
 
 /**************** file-local global variables ****************/
 
@@ -51,7 +52,10 @@ void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     player_t* currentPlayer = item;
     player_serverMapUpdate(currentPlayer, fullMap);
 
-    const char* gridString = grid_string(player_getMap(currentPlayer));
+    grid_t* visibleGrid = player_getMap(currentPlayer);
+    grid_t* visibleGold = player_getVisibleGold(currentPlayer);
+    grid_overlay(visibleGrid, visibleGold, visibleGrid, visibleGrid);
+    const char* gridString = grid_string(visibleGrid);
     char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
     sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
     message_send(player_getAddr(currentPlayer), sendDisplayMsg);

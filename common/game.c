@@ -32,6 +32,7 @@ typedef struct game {
     addr_t spectator;
     grid_t* originalMap;
     grid_t* fullMap;
+    grid_t* goldMap;
     gold_t* goldNuggets;
     int mapRows;
     int mapCols;
@@ -45,7 +46,8 @@ typedef struct game {
 // at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
 // each pile shall have a random number of nuggets.
 void game_setGold(game_t* game) {
-
+    
+    game->goldMap = grid_new(game->mapRows, game->mapCols);
     int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
     int maxNuggetsInPile = GoldTotal - numbPiles + 1;       // max is total gold - total piles + 1, need to update max
     int allocatedNuggets = 0;
@@ -55,7 +57,7 @@ void game_setGold(game_t* game) {
         // generate random location
         int goldRow = rand() % game->mapRows;
         int goldCol = rand() % game->mapCols;
-        while(!grid_isRoomSpot(game->fullMap, goldRow, goldCol)) {
+        while(!grid_isRoomSpot(game->fullMap, goldRow, goldCol) || grid_isGold(game->goldMap, goldRow, goldCol)) {
             goldRow = rand() % game->mapRows;
             goldCol = rand() % game->mapCols;
         }
@@ -75,7 +77,7 @@ void game_setGold(game_t* game) {
         gold_addGoldPile(game->goldNuggets, goldRow, goldCol, numbNuggets);
 
         // update grid
-        grid_set(game->fullMap, goldRow, goldCol, GRID_GOLD);
+        grid_set(game->goldMap, goldRow, goldCol, GRID_GOLD);
         
     }
 
@@ -102,30 +104,43 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     free(sendGoldMsg);
 }
 
+// FIX
 void game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
-    int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
-    game->remainingGold -= numbNuggets;
-    player_foundGoldNuggets(player, numbNuggets);
-    int purse = 
+    grid_set(game->goldMap, goldRow, goldCol, GRID_BLANK);
+    // int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
+    // game->remainingGold -= numbNuggets;
+    // player_foundGoldNuggets(player, numbNuggets);
+    // int purse = player_getGold(player);
+    // game_sendGoldMessage(game, player_getAddr(player), numbNuggets, purse);
+    // // update spectator
+    //     if (message_isAddr(game->spectator)) {
+    //     game_sendGoldMessage(game, game->spectator, 0, 0);
+    // }
+    // update all clients
 }
 
 // If player is spectator, sends full map, otherwise sends player's visible map
 void game_sendDisplayMessage(game_t* game, addr_t player) {
     if (message_eqAddr(game->spectator, player)) {
-        const char* gridString = grid_string(game->fullMap);
+        grid_t* sendDisplayGrid = grid_new(game->mapRows, game->mapCols);
+        grid_overlay(game->fullMap, game->goldMap, game->fullMap, sendDisplayGrid);
+        const char* gridString = grid_string(sendDisplayGrid);
         char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
         sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
         message_send(player, sendDisplayMsg);
         free(sendDisplayMsg);
+        grid_delete(sendDisplayGrid);
         return;
     }
     player_t* playerToUpdate = roster_getPlayerFromAddr(game->players, player);
-    const char* gridString = grid_string(player_getMap(playerToUpdate));
+    grid_t* visibleGrid = player_getMap(playerToUpdate);
+    grid_t* visibleGold = player_getVisibleGold(playerToUpdate);
+    grid_overlay(visibleGrid, visibleGold, visibleGrid, visibleGrid);
+    const char* gridString = grid_string(visibleGrid);
     char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
     sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
     message_send(player, sendDisplayMsg);
     free(sendDisplayMsg);
-    // When sending your visible map, updates your location with the @ symbol
 }
 
 // Call roster_updateAllPlayers to send latest DISPLAY, calls sendDisplay to spectator
@@ -226,6 +241,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      */
     int playerX = rand() % game->mapCols;
     int playerY = rand() % game->mapRows;
+    // make sure is in valid room spot and NOT gold nugget
     while(!grid_isRoomSpot(game->fullMap, playerY, playerX)) {
         playerX = rand() % game->mapCols;
         playerY = rand() % game->mapRows;
@@ -234,7 +250,8 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     grid_t* playerVisibleGrid = grid_new(game->mapRows, game->mapCols);
     grid_visible(game->fullMap, playerY, playerX, playerVisibleGrid);
     grid_set(playerVisibleGrid, playerY, playerX, GRID_PLAYER_ME);
-    player_initializeGridAndLocation(newPlayer, playerVisibleGrid, playerX, playerY);
+    player_initializeGridAndLocation(newPlayer, playerVisibleGrid, game->goldMap, playerX, playerY);
+    player_updateVisibility(newPlayer, game->fullMap, game->goldMap);
 
     // Send 'OK playerID'
     game_sendOKMessage(newPlayer, playerAddr);
@@ -288,13 +305,13 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
     if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
-        if (moveTo == GRID_GOLD) {
-
+        if (grid_isGold(game->goldMap, playerRow, newPlayerCol)) {
+            game_foundGold(game, calledPlayer, playerRow, newPlayerCol);
         }
         grid_set(game->fullMap, playerRow, newPlayerCol+1, moveFrom);                    // reset spot on map
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         player_moveLeftAndRight(calledPlayer, -1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         game_updateAllUsers(game);
 
     } else if (isalpha(moveTo)) {           // is another player then swap
@@ -303,10 +320,10 @@ void game_h_moveLeft(game_t* game, addr_t player, const char* message) {
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         // update player
         player_moveLeftAndRight(calledPlayer, -1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         // update conflicting player
         player_moveLeftAndRight(conflictingPlayer, 1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
-        player_updateVisibility(conflictingPlayer, game->fullMap);
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
         // update all
         game_updateAllUsers(game);
 
@@ -355,13 +372,13 @@ void game_l_moveRight(game_t* game, addr_t player, const char* message) {
     if (grid_isSpot(game->fullMap, playerRow, newPlayerCol)) {
         
         // if gold, send gold update to all clients
-        if (moveTo == GRID_GOLD) {
-
+        if (grid_isGold(game->goldMap, playerRow, newPlayerCol)) {
+            game_foundGold(game, calledPlayer, playerRow, newPlayerCol);
         }
         grid_set(game->fullMap, playerRow, newPlayerCol-1, moveFrom);                    // reset spot on map
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         player_moveLeftAndRight(calledPlayer, 1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         game_updateAllUsers(game);
 
     } else if (isalpha(moveTo)) {           // is another player then swap
@@ -370,10 +387,10 @@ void game_l_moveRight(game_t* game, addr_t player, const char* message) {
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         // update player
         player_moveLeftAndRight(calledPlayer, 1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         // update conflicting player
         player_moveLeftAndRight(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
-        player_updateVisibility(conflictingPlayer, game->fullMap);
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
         // update all
         game_updateAllUsers(game);
 
@@ -402,13 +419,13 @@ void game_j_moveDown(game_t* game, addr_t player, const char* message) {
     if (grid_isSpot(game->fullMap, newPlayerRow, playerCol)) {
         
         // if gold, send gold update to all clients
-        if (moveTo == GRID_GOLD) {
-
+        if (grid_isGold(game->goldMap, newPlayerRow, playerCol)) {
+            game_foundGold(game, calledPlayer, newPlayerRow, playerCol);
         }
         grid_set(game->fullMap, newPlayerRow-1, playerCol, moveFrom);                    // reset spot on map
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         player_moveUpAndDown(calledPlayer, 1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         game_updateAllUsers(game);
 
     } else if (isalpha(moveTo)) {           // is another player then swap
@@ -417,10 +434,10 @@ void game_j_moveDown(game_t* game, addr_t player, const char* message) {
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         // update player
         player_moveUpAndDown(calledPlayer, 1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         // update conflicting player
         player_moveUpAndDown(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
-        player_updateVisibility(conflictingPlayer, game->fullMap);
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
         // update all
         game_updateAllUsers(game);
 
@@ -450,13 +467,13 @@ void game_k_moveUp(game_t* game, addr_t player, const char* message) {
     if (grid_isSpot(game->fullMap, newPlayerRow, playerCol)) {
         
         // if gold, send gold update to all clients
-        if (moveTo == GRID_GOLD) {
-
+        if (grid_isGold(game->goldMap, newPlayerRow, playerCol)) {
+            game_foundGold(game, calledPlayer, newPlayerRow, playerCol);
         }
         grid_set(game->fullMap, newPlayerRow+1, playerCol, moveFrom);                    // reset spot on map
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         player_moveUpAndDown(calledPlayer, -1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         game_updateAllUsers(game);
 
     } else if (isalpha(moveTo)) {           // is another player then swap
@@ -465,10 +482,10 @@ void game_k_moveUp(game_t* game, addr_t player, const char* message) {
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         // update player
         player_moveUpAndDown(calledPlayer, -1, moveFrom);
-        player_updateVisibility(calledPlayer, game->fullMap);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
         // update conflicting player
         player_moveUpAndDown(conflictingPlayer, 1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
-        player_updateVisibility(conflictingPlayer, game->fullMap);
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
         // update all
         game_updateAllUsers(game);
 
