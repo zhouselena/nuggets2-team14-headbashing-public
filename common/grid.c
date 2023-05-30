@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #include "grid.h"
 #include "../support/message.h" // only for message_MaxBytes
 
@@ -279,7 +280,8 @@ grid_isSpot(const grid_t* grid, const int r, const int c)
   return grid == NULL ? false :
        CELL(grid, r, c) == GRID_ROOM_SPOT
     || CELL(grid, r, c) == GRID_PASS_SPOT
-    || CELL(grid, r, c) == GRID_GOLD;
+    || CELL(grid, r, c) == GRID_GOLD
+    || isalpha(CELL(grid, r, c));
 }
 
 /**************** grid_isRoomSpot ****************/
@@ -289,7 +291,9 @@ bool
 grid_isRoomSpot(const grid_t* grid, const int r, const int c)
 {
   return grid == NULL ? false :
-    CELL(grid, r, c) == GRID_ROOM_SPOT;
+    CELL(grid, r, c) == GRID_ROOM_SPOT ||
+    CELL(grid, r, c) == GRID_GOLD ||
+    isalpha(CELL(grid, r, c));
 }
 
 /**************** grid_isGold ****************/
@@ -300,6 +304,16 @@ grid_isGold(const grid_t* grid, const int r, const int c)
 {
   return grid == NULL ? false :
     CELL(grid, r, c) == GRID_GOLD;
+}
+
+/**************** grid_isGold ****************/
+/* see grid.h for detailed interface description */
+/* is point r,c a spot? */
+bool
+grid_isPlayer(const grid_t* grid, const int r, const int c)
+{
+  return grid == NULL ? false :
+    isalpha(CELL(grid, r, c));
 }
 
 /**************** grid_isBlank ****************/

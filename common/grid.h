@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
-#include "game.h"
 
 /********************* types **************************/
 
@@ -148,6 +147,10 @@ bool grid_isSpot(const grid_t* grid, const int r, const int c);
 
 bool grid_isGold(const grid_t* grid, const int r, const int c);
 /* Return true iff the given gridpoint is a "gold spot".
+ */
+
+bool grid_isPlayer(const grid_t* grid, const int r, const int c);
+/* Return true iff the given gridpoint is a "player".
  */
 
 bool grid_isRoomSpot(const grid_t* grid, const int r, const int c);
