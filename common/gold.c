@@ -20,6 +20,8 @@ typedef struct findGoldPile {
     goldPile_t* matchedPile;
 } findGoldPile_t;
 
+char goldID = 'A';
+
 /**************** global types ****************/
 
 typedef struct goldPile {
@@ -56,6 +58,8 @@ void gold_addGoldPile(gold_t* gold, int row, int col, int nuggets) {
     pile->goldCol = col;
     pile->numNuggets = nuggets;
     pile->collected = 0;
+    set_insert(gold->piles, &goldID, pile);
+    goldID++;
 
 }
 
@@ -73,7 +77,7 @@ int gold_foundPile(gold_t* gold, int row, int col) {
     goldInfoPack->findRow = row; goldInfoPack->findCol = col; goldInfoPack->matchedPile = NULL;
     set_iterate(gold->piles, goldInfoPack, gold_foundPile_Helper);
     goldPile_t* foundPile = goldInfoPack->matchedPile;
-    if (foundPile == NULL) return 0;
+    if (foundPile == NULL) return -1;
     foundPile->collected = 1;
     return foundPile->numNuggets;
 

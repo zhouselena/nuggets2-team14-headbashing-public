@@ -107,15 +107,15 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
 // FIX
 void game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
     grid_set(game->goldMap, goldRow, goldCol, GRID_BLANK);
-    // int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
-    // game->remainingGold -= numbNuggets;
-    // player_foundGoldNuggets(player, numbNuggets);
-    // int purse = player_getGold(player);
-    // game_sendGoldMessage(game, player_getAddr(player), numbNuggets, purse);
-    // // update spectator
-    //     if (message_isAddr(game->spectator)) {
-    //     game_sendGoldMessage(game, game->spectator, 0, 0);
-    // }
+    int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
+    game->remainingGold -= numbNuggets;
+    player_foundGoldNuggets(player, numbNuggets);
+    int purse = player_getGold(player);
+    game_sendGoldMessage(game, player_getAddr(player), numbNuggets, purse);
+    // update spectator
+        if (message_isAddr(game->spectator)) {
+        game_sendGoldMessage(game, game->spectator, 0, 0);
+    }
     // update all clients
 }
 
