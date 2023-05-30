@@ -49,7 +49,7 @@ int main(const int argc, char* argv[]) {
     // Wait for messages from clients (players or spectators). (call message_loop() from message)
     message_loop(NULL, 0, NULL, handleInput, handleMessage);        // figure out the first three args
 
-    // Free everything, call game_over()
+    // Free everything and exit server
     game_over();
 
 }
@@ -140,13 +140,7 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
     return false;
 }
 
-/* game_over:
- * Calls at the end of game.
- * Sends ending message to all clients,
- * kicks clients out,
- * frees game,
- * then calls message_done().
- */
 void game_over() {
-
+    fprintf(stdout, "Server is shutting down.\n");
+    message_done();
 }

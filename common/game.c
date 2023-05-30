@@ -195,8 +195,9 @@ void end_game(game_t* game) {
     if (message_isAddr(game->spectator)) {
         message_send(game->spectator, summary);
     }
-    // free everything in game
     free(summary);
+    // free everything in game
+    
 }
 
 /* receive input */
