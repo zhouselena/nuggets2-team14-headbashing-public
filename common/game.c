@@ -571,7 +571,48 @@ bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
         return false;
     }
 
-    message_send(player, "u key received.");
+    // set up player
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // make sure not out of bound
+    int newPlayerRow = player_getYLocation(calledPlayer)-1;
+    int newPlayerCol = player_getXLocation(calledPlayer)+1;
+    if (newPlayerRow < 0 || newPlayerCol > game->mapCols) return false;
+
+    // check what the next space is
+    char moveFrom = grid_get(game->originalMap, newPlayerRow+1, newPlayerCol-1);
+    char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+        
+        // if gold, send gold update to all clients
+        if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
+            if (game_foundGold(game, calledPlayer, newPlayerRow, newPlayerCol)) return true;
+        }
+        grid_set(game->fullMap, newPlayerRow+1, newPlayerCol-1, moveFrom);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        player_moveUpAndDown(calledPlayer, -1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, 1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        game_updateAllUsers(game);
+
+    } else if (isalpha(moveTo)) {           // is another player then swap
+        player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        grid_set(game->fullMap, newPlayerRow+1, newPlayerCol-1, moveTo);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        // update player
+        player_moveUpAndDown(calledPlayer, -1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, 1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        // update conflicting player
+        player_moveUpAndDown(conflictingPlayer, 1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_moveLeftAndRight(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
+        // update all
+        game_updateAllUsers(game);
+    }
+
     return false;
 }
 bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
@@ -581,7 +622,47 @@ bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
         return false;
     }
 
-    message_send(player, "b key received.");
+    // set up player
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // make sure not out of bound
+    int newPlayerRow = player_getYLocation(calledPlayer)+1;
+    int newPlayerCol = player_getXLocation(calledPlayer)-1;
+    if (newPlayerRow > game->mapRows || newPlayerCol < 0) return false;
+
+    // check what the next space is
+    char moveFrom = grid_get(game->originalMap, newPlayerRow-1, newPlayerCol+1);
+    char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+        
+        // if gold, send gold update to all clients
+        if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
+            if (game_foundGold(game, calledPlayer, newPlayerRow, newPlayerCol)) return true;
+        }
+        grid_set(game->fullMap, newPlayerRow-1, newPlayerCol+1, moveFrom);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        player_moveUpAndDown(calledPlayer, 1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, -1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        game_updateAllUsers(game);
+
+    } else if (isalpha(moveTo)) {           // is another player then swap
+        player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        grid_set(game->fullMap, newPlayerRow-1, newPlayerCol+1, moveTo);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        // update player
+        player_moveUpAndDown(calledPlayer, 1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, -1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        // update conflicting player
+        player_moveUpAndDown(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_moveLeftAndRight(conflictingPlayer, 1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
+        // update all
+        game_updateAllUsers(game);
+    }
 
     return false;
 }
@@ -592,7 +673,47 @@ bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
         return false;
     }
 
-    message_send(player, "n key received.");
+    // set up player
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // make sure not out of bound
+    int newPlayerRow = player_getYLocation(calledPlayer)+1;
+    int newPlayerCol = player_getXLocation(calledPlayer)+1;
+    if (newPlayerRow > game->mapRows || newPlayerCol > game->mapCols) return false;
+
+    // check what the next space is
+    char moveFrom = grid_get(game->originalMap, newPlayerRow-1, newPlayerCol-1);
+    char moveTo = grid_get(game->fullMap, newPlayerRow, newPlayerCol);
+    if (grid_isSpot(game->fullMap, newPlayerRow, newPlayerCol)) {
+        
+        // if gold, send gold update to all clients
+        if (grid_isGold(game->goldMap, newPlayerRow, newPlayerCol)) {
+            if (game_foundGold(game, calledPlayer, newPlayerRow, newPlayerCol)) return true;
+        }
+        grid_set(game->fullMap, newPlayerRow-1, newPlayerCol-1, moveFrom);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        player_moveUpAndDown(calledPlayer, 1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, 1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        game_updateAllUsers(game);
+
+    } else if (isalpha(moveTo)) {           // is another player then swap
+        player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        grid_set(game->fullMap, newPlayerRow-1, newPlayerCol-1, moveTo);                      // reset spot on map
+        grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
+        // update player
+        player_moveUpAndDown(calledPlayer, 1, moveFrom);
+        moveFrom = grid_get(game->originalMap, player_getYLocation(calledPlayer), player_getXLocation(calledPlayer));
+        player_moveLeftAndRight(calledPlayer, 1, moveFrom);
+        player_updateVisibility(calledPlayer, game->fullMap, game->goldMap);
+        // update conflicting player
+        player_moveUpAndDown(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_moveLeftAndRight(conflictingPlayer, -1, grid_get(game->originalMap, player_getYLocation(conflictingPlayer), player_getXLocation(conflictingPlayer)));
+        player_updateVisibility(conflictingPlayer, game->fullMap, game->goldMap);
+        // update all
+        game_updateAllUsers(game);
+    }
 
     return false;
 }
