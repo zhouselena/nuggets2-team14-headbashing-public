@@ -132,7 +132,6 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     free(sendGoldMsg);
 }
 
-
 /* game_updateAllUsersGold(game_t* game)
  * 
  * To be called when any gold is found and server nuggets status has changed. Updates all players
@@ -220,7 +219,12 @@ void game_updateAllUsers(game_t* game) {
 }
 
 /**************** functions ****************/
+/* these are visible to users outside this file */
 
+/* create and delete */
+
+/**************** game_new ****************/
+/* see game.h for description */
 game_t* game_new(char* mapFileName) {
 
     game_t* game = malloc(sizeof(game_t));
@@ -243,6 +247,8 @@ game_t* game_new(char* mapFileName) {
     return game;
 }
 
+/**************** end_game ****************/
+/* see game.h for description */
 void end_game(game_t* game) {
     // sends summary to all players
     char* summary = roster_createGameMessage(game->players);
@@ -257,6 +263,8 @@ void end_game(game_t* game) {
 
 /* receive input */
 
+/**************** game_addSpectator ****************/
+/* see game.h for description */
 void game_addSpectator(game_t* game, addr_t newSpectator) {
     if (message_isAddr(newSpectator)) {
 
@@ -276,6 +284,8 @@ void game_addSpectator(game_t* game, addr_t newSpectator) {
     }
 }
 
+/**************** game_addPlayer ****************/
+/* see game.h for description */
 void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
     // Send QUIT if at max players
@@ -321,7 +331,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
      */
     int playerX = rand() % game->mapCols;
     int playerY = rand() % game->mapRows;
-    // make sure is in valid room spot
+    // make sure is in valid room spot and NOT on top of another player
     while(!grid_isRoomSpot(game->fullMap, playerY, playerX) || grid_isPlayer(game->fullMap, playerY, playerX)) {
         playerX = rand() % game->mapCols;
         playerY = rand() % game->mapRows;
@@ -355,6 +365,8 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
 
 /* key press helper functions */
 
+/**************** game_Q_quitGame ****************/
+/* see game.h for description */
 bool game_Q_quitGame(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
@@ -375,6 +387,8 @@ bool game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     
 }
 
+/**************** game_h_moveLeft ****************/
+/* see game.h for description */
 bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
