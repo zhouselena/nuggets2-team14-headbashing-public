@@ -50,7 +50,7 @@ int main(const int argc, char* argv[]) {
     message_loop(NULL, 0, NULL, handleInput, handleMessage);        // figure out the first three args
 
     // Free everything, call game_over()
-    // game_over();
+    game_over();
 
 }
 
