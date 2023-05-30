@@ -1,6 +1,6 @@
 # Makefile for CS50 Nuggets
 #
-# Team 14 - Spring 2023
+# Team 14 - Headbashing - Spring 2023
 
 C = ./common
 S = ./support
@@ -21,7 +21,12 @@ client: client.o $(LLIBS)
 
 client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 
-.PHONY: all clean
+############## valgrind ##########
+valgrind:
+	valgrind --leak-check=full --show-leak-kinds=all ./server
+	valgrind --leak-check=full --show-leak-kinds=all ./client
+
+.PHONY: all clean valgrind
 
 ############## default: make all libs and programs ##########
 all: 
@@ -37,4 +42,5 @@ TAGS:  Makefile */Makefile */*.c */*.h */*.md */*.sh
 clean:
 	rm -f *~
 	rm -f TAGS
+	rm -f *.log
 #	make -C common clean
