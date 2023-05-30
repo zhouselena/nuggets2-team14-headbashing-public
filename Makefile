@@ -23,13 +23,13 @@ client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 
 ############## valgrind ##########
 valgrind:
-	valgrind --leak-check=full --show-leak-kinds=all ./server
-	valgrind --leak-check=full --show-leak-kinds=all ./client
+#   valgrind --leak-check=full --show-leak-kinds=all ./server
+	valgrind --leak-check=full --show-leak-kinds=all ./client 
 
-.PHONY: all clean valgrind
+.PHONY: all clean valgrind 
 
 ############## default: make all libs and programs ##########
-all: 
+all:
 	make -C common
 	make server
 	make client
@@ -43,4 +43,6 @@ clean:
 	rm -f *~
 	rm -f TAGS
 	rm -f *.log
+	rm -f *.nfs
+
 #	make -C common clean
