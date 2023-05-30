@@ -271,28 +271,27 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 }
 
 static bool handleInput(void* arg) {
+    // Allocate a buffer for the key press.
     char* keySend = mem_malloc(10);
-    char* keyChar = arg;
 
-    if(sscanf(keyChar, "%c", keySend) == 1){
-        sprintf(keySend, "KEY %s", keyChar);
-        message_send(clientStruct->serverAddr, keySend);
-        if(*keySend == 'Q' || *keySend == 'q'){  // Check if Q/q is pressed
-            mem_free(keySend);
-            delwin(clientStruct->clientwindow);  // Delete the window
-            endwin();  // End ncurses mode
-            exit(0);  // This will close the program when Q is pressed
-        }
-        mem_free(keySend);
-        return true;
-    }
-    else{
-        message_send(clientStruct->serverAddr, "KEY Q");
-        mem_free(keySend);
-        return false;
-    }
+    // Read the key press. The ncurses function getch() is used to get the key pressed
+    int keyChar = getch();
 
+    // Check if Q/q is pressed.
+    if(keyChar == 'Q' || keyChar == 'q'){
+        mem_free(keySend);
+        delwin(clientStruct->clientwindow);  // Delete the window
+        endwin();  // End ncurses mode
+        exit(0);  // Close program when Q is pressed
+    }
+  
+    // Format the key press into the keySend buffer and send it to the server.
+    sprintf(keySend, "KEY %c", keyChar);
+    message_send(clientStruct->serverAddr, keySend);
+
+    mem_free(keySend);
+  
     clrtoeol();
+
+    return false;  // Return false to continue the input loop.
 }
-
-
