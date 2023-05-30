@@ -40,21 +40,25 @@ typedef struct game {
 } game_t;
 
 /**************** helper functions ****************/
+/* these functions are opaque to outside files */
 
-
-// Initialize the game by dropping
-// at least GoldMinNumPiles and at most GoldMaxNumPiles gold piles on random room spots;
-// each pile shall have a random number of nuggets.
+/* game_setGold(game_t* game)
+ * 
+ * This function initializes the game by dropping at least GoldMinNumPiles and at most GoldMaxNumPiles
+ * gold piles on random room spots with random number of nuggets per pile, remembering on game's gold map.
+ * Caller provides: game with valid full map
+ * Returns: nothing
+ */
 void game_setGold(game_t* game) {
     
     game->goldMap = grid_new(game->mapRows, game->mapCols);
-    int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;  // will generate between 0 and difference, then add to min
-    int maxNuggetsInPile = GoldTotal - numbPiles + 1;       // max is total gold - total piles + 1, need to update max
-    int allocatedNuggets = 0;
+    int numbPiles = rand() % (GoldMaxNumPiles-GoldMinNumPiles+1) + GoldMinNumPiles;     // will generate between 0 and difference, then add to min
+    int maxNuggetsInPile = GoldTotal - numbPiles + 1;               // max nuggets in one pile is total gold - total piles + 1, need to update max
+    int allocatedNuggets = 0;   // total allocated number of nuggets (max of GoldTotal)
     game->goldNuggets = gold_new(numbPiles);
 
     for (int i = 0; i < numbPiles; i++) {
-        // generate random location
+        // generate random location, makes sure it is a room spot WITHOUT existing pile
         int goldRow = rand() % game->mapRows;
         int goldCol = rand() % game->mapCols;
         while(!grid_isRoomSpot(game->fullMap, goldRow, goldCol) || grid_isGold(game->goldMap, goldRow, goldCol)) {
@@ -67,7 +71,7 @@ void game_setGold(game_t* game) {
             numbNuggets = GoldTotal - allocatedNuggets;
             maxNuggetsInPile = 0;
         } else {
-            // generate random nugget number, then update max nuggets
+            // generate random nugget number, then update max nuggets for one pile
             numbNuggets = rand() % maxNuggetsInPile + 1;
             allocatedNuggets += numbNuggets;
             maxNuggetsInPile = (GoldTotal - allocatedNuggets) - (numbPiles - i) + 1;       // new max is remaining gold - remaining piles + 1
@@ -83,6 +87,13 @@ void game_setGold(game_t* game) {
 
 }
 
+/* game_sendOKMessage(player_t* newPlayer, addr_t playerAddr)
+ * 
+ * Call this function when a new player is first added to the game. This function sends an 
+ * 'OK [playerID]' message to the client.
+ * Caller provides: valid player and player address
+ * Returns: nothing
+ */
 void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
     char* sendOKmessage = malloc(10);
     sprintf(sendOKmessage, "OK %c", player_getID(newPlayer));
@@ -90,6 +101,13 @@ void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
     free(sendOKmessage);
 }
 
+/* game_sendGridMessage(player_t* newPlayer, addr_t playerAddr)
+ * 
+ * Call this function when a new player is first added to the game. This function sends a
+ * 'GRID [nrows] [ncols]' message to the client.
+ * Caller provides: valid player and player address
+ * Returns: nothing
+ */
 void game_sendGridMessage(game_t* game, addr_t player) {
     char* sendGridMessage = malloc(10);
     sprintf(sendGridMessage, "GRID %d %d", game->mapRows, game->mapCols);
@@ -97,6 +115,16 @@ void game_sendGridMessage(game_t* game, addr_t player) {
     free(sendGridMessage);
 }
 
+/* game_sendGoldMessage(game_t* game, addr_t player, int n, int p)
+ * 
+ * Call this function to provide client updates on the status of gold nuggets in the map.
+ * Sends 'GOLD [nuggets found] [player purse] [remaining gold]' to client.
+ * Caller provides:
+ *  - valid player and player address
+ *  - number of gold nuggets found (may be 0 indicating remaining gold update)
+ *  - number of gold nuggets in the players purse
+ * Returns: nothing
+ */
 void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     char* sendGoldMsg = malloc(20);
     sprintf(sendGoldMsg, "GOLD %d %d %d", n, p, game->remainingGold);
@@ -104,6 +132,14 @@ void game_sendGoldMessage(game_t* game, addr_t player, int n, int p) {
     free(sendGoldMsg);
 }
 
+
+/* game_updateAllUsersGold(game_t* game)
+ * 
+ * To be called when any gold is found and server nuggets status has changed. Updates all players
+ * and spectator with GOLD message.
+ * Caller provides: valid game
+ * Returns: nothing
+ */
 void game_updateAllUsersGold(game_t* game) {
     if (message_isAddr(game->spectator)) {
         game_sendGoldMessage(game, game->spectator, 0, 0);
@@ -111,6 +147,13 @@ void game_updateAllUsersGold(game_t* game) {
     roster_updateAllPlayersGold(game->players, game);
 }
 
+/* game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol)
+ * 
+ * To be called when a player finds a gold nugget. Gets the number of nuggets in that pile, adds to player's purse.
+ * If no more gold nuggets left, calls end_game() and return true. Otherwise, send GOLD update to all users.
+ * Caller provides: valid game, player who found the gold, XY location on the map
+ * Returns: true if game over, false otherwise
+ */
 bool game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
     int numbNuggets = gold_foundPile(game->goldNuggets, goldRow, goldCol);
     game->remainingGold -= numbNuggets;
@@ -132,7 +175,13 @@ bool game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
     return false;
 }
 
-// If player is spectator, sends full map, otherwise sends player's visible map
+/* game_sendDisplayMessage(game_t* game, addr_t player)
+ * 
+ * To be called to update ONE player's display and send 'DISPLAY\n string' message.
+ * If user is the spectator, sends full map and full gold map, otherwise sends player's visible map and visible gold.
+ * Caller provides: valid game, user address
+ * Returns: nothing
+ */
 void game_sendDisplayMessage(game_t* game, addr_t player) {
     if (message_eqAddr(game->spectator, player)) {
         grid_t* sendDisplayGrid = grid_new(game->mapRows, game->mapCols);
@@ -156,7 +205,13 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
     free(sendDisplayMsg);
 }
 
-// Call roster_updateAllPlayers to send latest DISPLAY, calls sendDisplay to spectator
+/* game_updateAllUsers(game_t* game)
+ * 
+ * To be called when map has updated. Updates all users, including spectator, on the new state of the map.
+ * Sends latest DISPLAY with any updates in their existing visible map for player, and full display msg for spectator.
+ * Caller provides: valid game
+ * Returns: nothing
+ */
 void game_updateAllUsers(game_t* game) {
     if (message_isAddr(game->spectator)) {
         game_sendDisplayMessage(game, game->spectator);
@@ -323,7 +378,7 @@ bool game_Q_quitGame(game_t* game, addr_t player, const char* message) {
 bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -389,7 +444,7 @@ bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 bool game_l_moveRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -435,7 +490,7 @@ bool game_l_moveRight(game_t* game, addr_t player, const char* message) {
 bool game_j_moveDown(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -482,7 +537,7 @@ bool game_j_moveDown(game_t* game, addr_t player, const char* message) {
 bool game_k_moveUp(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -529,7 +584,7 @@ bool game_k_moveUp(game_t* game, addr_t player, const char* message) {
 bool game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
     
@@ -581,7 +636,7 @@ bool game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -632,7 +687,7 @@ bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -683,7 +738,7 @@ bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
-        message_send(player, "ERROR Invalid key for spectator.");
+        message_send(player, "ERROR unknown keystroke for spectator.");
         return false;
     }
 
@@ -762,7 +817,7 @@ bool game_keyPress(game_t* game, addr_t player, const char* message) {
         case 'n':
             return game_n_moveDiagDownRight(game, player, message);
         default:
-            message_send(player, "ERROR Invalid key.");
+            message_send(player, "ERROR unknown keystroke.");
             return false;
     }
 
