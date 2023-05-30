@@ -26,17 +26,18 @@
 
 /**************** global integer ****************/
 #define MAX_PLAYER_NAME_LENGTH 50
-#define MAX_MSG_SIZE 1024
 
 /**************** global types ****************/
 typedef struct clientStruct {
     bool isPlayer;
     char playername[MAX_PLAYER_NAME_LENGTH];
-    const char* playerID;
+    char* playerID;
     addr_t serverAddr;
     WINDOW* clientwindow;
     int curX;  
     int curY;
+    int goldNuggets; 
+    int totalNuggets;
 } clientStruct_t;
 
 /**************** global variables ****************/
@@ -60,10 +61,18 @@ int main(const int argc, char* argv[]) {
     if (!clientStruct) {
         fprintf(stderr, "Memory allocation failed.\n");
         exit(1);
-    }       
+    }    
+
     parseArgs(argc, argv);
     initializeDisplay();
     initializeNetwork(argv[1], argv[2], stderr, clientStruct->isPlayer ? clientStruct->playername : NULL);
+    
+    // Shutting down program
+    delwin(clientStruct->clientwindow);  
+    endwin(); 
+    
+    mem_free(clientStruct->playerID);
+    mem_free(clientStruct);
     exit(0);
 }
 
@@ -167,12 +176,13 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 /* 
  */
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
+
     //Handle OK message 
     if (strncmp(message, "OK", 2) == 0) {
-        char* ID = mem_malloc(5);
-        sscanf(message, "OK %s", ID);
+        char* ID = mem_malloc(2);  // Allocate an extra byte for the null terminator.
+        sscanf(message, "OK %1s", ID);  // Read at most 1 characters into ID.
+        ID[1] = '\0';  // Explicitly null-terminate the string.
         clientStruct->playerID = ID;
-        mem_free(ID);
     }
     // Handle GRID message
     else if (strncmp(message, "GRID", 4) == 0) {
@@ -195,76 +205,100 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         int n; //inform player it has collected n nuggets
         int p; // purse has p gold nugs
         int r; // r gold left to be found
-        int args = sscanf(message, "GOLD %d %d %d", &n, &p, &r);
+        sscanf(message, "GOLD %d %d %d", &n, &p, &r);
 
-        // Check number of args
-        if (args != 3) {
-            fprintf(stderr, "ERROR: invalid number of arguments passed\n");
-            return false;
-        }
+        // Update the client's gold nuggets
+        clientStruct->goldNuggets = p;
+        clientStruct->totalNuggets = r;
+        
         // Update status line
         if (clientStruct->isPlayer) {
-            mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). GOLD received: %d", clientStruct->playername, p, r, n);
+            if (n == 0) {
+                mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed).", clientStruct->playerID, p, r);
+            }
+            else {
+                mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). GOLD received: %d", clientStruct->playerID, p, r, n);
+            }
+            refresh();
         }
         else {
-            mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
+            mvprintw(0, 0, "Spectator: %d nuggets unclaimed. GOLD received: %d", r, n);
         }
+        
+        // Refresh the screen to display changes
+        refresh();
     }
     // Handle DISPLAY message
     else if (strncmp(message, "DISPLAY", 7) == 0) {
-        // Split the message into lines
-        char* line = strtok(message, "\n");
-        int lineNumber = 1;
-        while (line != NULL) {
-            // Skip the "DISPLAY" line
-            if (strncmp(line, "DISPLAY", 7) != 0) {
-                // Print each line of the grid
+        int lineNumber = 1; // Start from the first character after "DISPLAY\n"
+        const char* line = message + 8;  // Skip "DISPLAY\n"
+
+        while (line) { //Print the whole map
+            const char* next_newline = strchr(line, '\n'); //find next line
+
+            // If a newline found
+            if (next_newline) {
+                int line_length = next_newline - line; // Calculate length of line
+                char* line_buffer = (char*)malloc(line_length + 1); // Allocate mem for line
+                strncpy(line_buffer, line, line_length); // Copy line
+                line_buffer[line_length] = '\0'; //Null-terminate
+
+                // Print the line
+                mvprintw(lineNumber++, 0, "%s", line_buffer);
+
+                // Free the memory for the line buffer
+                free(line_buffer);
+
+                // Move to the start of the next line
+                line = next_newline + 1;
+            } else {
+                // No more newlines - print the remaining part of the message
                 mvprintw(lineNumber++, 0, "%s", line);
+                line = NULL;  // Exit the loop
             }
-            // Get the next line
-            line = strtok(NULL, "\n");
         }
+
+        // Refresh the screen
         wrefresh(clientStruct->clientwindow);
     }
     // Handle QUIT message
     else if (strncmp(message, "QUIT", 4) == 0) {
-        endwin();
-        if (strlen(message) < strlen("QUIT ")) {
-            fprintf(stderr, "Error: QUIT message is too short.\n");
-            return false;
-            }
+        delwin(clientStruct->clientwindow); // Delete the window
+        endwin(); // end ncurser
 
-        char* quitMessage = mem_malloc(strlen(message) + 1);  // +1 for the null-terminator
-        if (!quitMessage) {
-            fprintf(stderr, "Error: Memory allocation for quitMessage failed.\n");
-            return false;
-        }
+        char* quitMessage = mem_malloc(strlen(message) + 1);  // +1 for null-terminator
+        strcpy(quitMessage, message); //Copy the message
 
-        strcpy(quitMessage, message);
+        printf("%s\n", quitMessage); //Print message
 
-        char* quitMessageContent = quitMessage + strlen("QUIT ");
-        printf("%s\n", quitMessageContent);
-
-        mem_free(quitMessage);  // now it's safe to free quitMessage
-        message_done();
-        return true; // Stop processing further messages
+        mem_free(quitMessage);  
+        mem_free(clientStruct);
+        message_done(); //ends the message loop
+        exit(0);  // Stop processing further messages -- exits the prgram
     }
     // Handle ERROR message
     else if (strncmp(message, "ERROR", 5) == 0) {
-        char errorMsg[MAX_MSG_SIZE];
-        sscanf(message, "ERROR %[^\n]", errorMsg);
-        fprintf(stderr, "Error: %s\n", errorMsg);
-    }
-    // Unknown message
-    else {
-        char errorMsg[MAX_MSG_SIZE];
-        sscanf(message, "%[^\n]", errorMsg);
-        fprintf(stderr, "Unknown message: %s\n", errorMsg);
+        fprintf(stderr, "Error: %s\n", message);
+        // Update the status line with the error message
         if (clientStruct->isPlayer) {
-            mvprintw(0, 0, "Player %s has unknown keystroke", clientStruct->playername);
+            mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). %s", clientStruct->playerID, clientStruct->goldNuggets, clientStruct->totalNuggets, message);
+            refresh();
+        } else {
+            mvprintw(0, 0, "Spectator: %s", message);
+            refresh();
         }
-        else {
-            mvprintw(0, 0, "Spectator: unknown keystroke");
+    }
+    // Unknown/ Misordered message
+    else {
+        fprintf(stderr, "Unknown message: %s\n", message);
+
+        // Update the status line with the unknown message
+        if (clientStruct->isPlayer) {
+            mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). Unknown message: %s", clientStruct->playerID, clientStruct->goldNuggets, clientStruct->totalNuggets, message);
+            refresh();
+        } else {
+            mvprintw(0, 0, "Spectator: Unknown message: %s", message);
+            refresh();
         }
     }
     return false;
@@ -277,19 +311,24 @@ static bool handleInput(void* arg) {
     // Read the key press. The ncurses function getch() is used to get the key pressed
     int keyChar = getch();
 
-    // Check if Q/q is pressed.
-    if(keyChar == 'Q' || keyChar == 'q'){
-        mem_free(keySend);
-        delwin(clientStruct->clientwindow);  // Delete the window
-        endwin();  // End ncurses mode
-        exit(0);  // Close program when Q is pressed
+    // Check if Q is pressed.
+    if(keyChar == 'Q'){
+        sprintf(keySend, "KEY %c", keyChar);
+        message_send(clientStruct->serverAddr, keySend);
     }
-  
-    // Format the key press into the keySend buffer and send it to the server.
-    sprintf(keySend, "KEY %c", keyChar);
-    message_send(clientStruct->serverAddr, keySend);
+    else { // If any other key is pressed
+        sprintf(keySend, "KEY %c", keyChar);
+        message_send(clientStruct->serverAddr, keySend); 
+    }
 
-    mem_free(keySend);
+    // Reset the status line to the original message
+    if (clientStruct->isPlayer) {
+        mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed).", clientStruct->playerID, clientStruct->goldNuggets, clientStruct->totalNuggets);
+    } else {
+        mvprintw(0, 0, "Spectator: %d nuggets unclaimed. GOLD received: %d", clientStruct->totalNuggets, clientStruct->goldNuggets);
+    }
+    
+    mem_free(keySend); 
   
     clrtoeol();
 
