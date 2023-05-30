@@ -149,6 +149,10 @@ bool grid_isGold(const grid_t* grid, const int r, const int c);
 /* Return true iff the given gridpoint is a "gold spot".
  */
 
+bool grid_isPlayer(const grid_t* grid, const int r, const int c);
+/* Return true iff the given gridpoint is a "player".
+ */
+
 bool grid_isRoomSpot(const grid_t* grid, const int r, const int c);
 /* Return true iff the given gridpoint is a "room spot".
  */

@@ -189,9 +189,14 @@ game_t* game_new(char* mapFileName) {
 }
 
 void end_game(game_t* game) {
+    // sends summary to all players
     char* summary = roster_createGameMessage(game->players);
-    fprintf(stderr, "%s\n", summary);
+    // send summary to spectator
+    if (message_isAddr(game->spectator)) {
+        message_send(game->spectator, summary);
+    }
     // free everything in game
+    free(summary);
 }
 
 /* receive input */
@@ -261,7 +266,7 @@ void game_addPlayer(game_t* game, addr_t playerAddr, const char* message) {
     int playerX = rand() % game->mapCols;
     int playerY = rand() % game->mapRows;
     // make sure is in valid room spot
-    while(!grid_isRoomSpot(game->fullMap, playerY, playerX)) {
+    while(!grid_isRoomSpot(game->fullMap, playerY, playerX) || grid_isPlayer(game->fullMap, playerY, playerX)) {
         playerX = rand() % game->mapCols;
         playerY = rand() % game->mapRows;
     }

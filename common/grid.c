@@ -306,6 +306,16 @@ grid_isGold(const grid_t* grid, const int r, const int c)
     CELL(grid, r, c) == GRID_GOLD;
 }
 
+/**************** grid_isGold ****************/
+/* see grid.h for detailed interface description */
+/* is point r,c a spot? */
+bool
+grid_isPlayer(const grid_t* grid, const int r, const int c)
+{
+  return grid == NULL ? false :
+    isalpha(CELL(grid, r, c));
+}
+
 /**************** grid_isBlank ****************/
 /* see grid.h for detailed interface description */
 /* is point r,c a GRID_BLANK? */
