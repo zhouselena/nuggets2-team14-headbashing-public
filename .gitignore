@@ -28,5 +28,5 @@ Icon?
 # Ignore the binary file
 client
 server
-.nfs
+.nfs*
 player.log
