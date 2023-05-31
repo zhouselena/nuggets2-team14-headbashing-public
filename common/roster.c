@@ -69,7 +69,7 @@ void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) 
  */
 void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
     player_t* player = item;
-    if (!message_isAddr(player_getAddr(player))) return;
+    if (!message_isAddr(player_getAddr(player))) return; // If player exited before game over, don't print in summary
 
     char** playerSummary = arg;
     char* currentMsg = *playerSummary;
