@@ -69,7 +69,9 @@ int main(const int argc, char* argv[]) {
     endwin(); 
     
     mem_free(clientStruct->playerID);
+    mem_free(clientStruct->playername);
     mem_free(clientStruct);
+
     exit(0);
 }
 
@@ -161,19 +163,20 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     // Shut down the message module
     message_done();
     
-    mem_free(playMessage);
-    if (!ok) {
+       if (!ok) {
         fprintf(stderr, "Error: message_loop failed.\n");
-        // Clean up and terminate the program if necessary
+        mem_free(playMessage); 
+        mem_free(clientStruct);
         exit(1);
     }
+    mem_free(playMessage);
+
 }
 
 /**************** handleMessage() ****************/
 /* 
  */
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
-
     //Handle OK message 
     if (strncmp(message, "OK", 2) == 0) {
         char* ID = mem_malloc(2);  // Allocate an extra byte for the null terminator.
@@ -312,10 +315,13 @@ static bool handleInput(void* arg) {
     if(keyChar == 'Q'){
         sprintf(keySend, "KEY %c", keyChar);
         message_send(clientStruct->serverAddr, keySend);
+        mem_free(keySend);
+
     }
     else { // If any other key is pressed
         sprintf(keySend, "KEY %c", keyChar);
-        message_send(clientStruct->serverAddr, keySend); 
+        message_send(clientStruct->serverAddr, keySend);
+        mem_free(keySend); 
     }
 
     // Reset the status line to the original message
@@ -324,9 +330,7 @@ static bool handleInput(void* arg) {
     } else {
         mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", clientStruct->totalNuggets);
     }
-    
-    mem_free(keySend); 
-  
+      
     clrtoeol();
 
     return false;  // Return false to continue the input loop.
