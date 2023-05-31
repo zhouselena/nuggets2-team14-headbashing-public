@@ -73,13 +73,10 @@ void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot);
  */
 void player_foundGoldNuggets(player_t* player, int numGold);
 /**************** player_updateVisibility ****************/
-/* Called after player x and y are updated. Adds visible map to the player's map.
+/* Called after player x and y are updated or server map is updated.
+ * Adds visible map to the player's map, updates from server and server gold.
  */
 void player_updateVisibility(player_t* player, grid_t* fullMap, grid_t* goldMap);
-/**************** player_serverMapUpdate ****************/
-/* If server map updates, player updates any part of its existing visible map/visible gold.
- */
-void player_serverMapUpdate(player_t* player, game_t* game);
 
 /* getter functions */
 

@@ -388,7 +388,16 @@ bool game_Q_quitGame(game_t* game, addr_t player, const char* message) {
     game->numbPlayers -= 1;
     
     player_t* freePlayer = roster_getPlayerFromAddr(game->players, player);
+
+    // EXTRA CREDIT: Drops player's purse as a pile if they have gold
     grid_set(game->fullMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer), grid_get(game->originalMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer)));
+    if (player_getGold(freePlayer) > 0) {
+        grid_set(game->goldMap, player_getYLocation(freePlayer), player_getXLocation(freePlayer), GRID_GOLD);
+        gold_addGoldPile(game->goldNuggets, player_getYLocation(freePlayer), player_getXLocation(freePlayer), player_getGold(freePlayer));
+        game->remainingGold += player_getGold(freePlayer);
+        game_updateAllUsersGold(game);
+    }
+
     player_setAddress(freePlayer, message_noAddr());
     message_send(player, "QUIT Thanks for playing!");
     game_updateAllUsers(game);

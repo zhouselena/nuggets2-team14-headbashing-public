@@ -37,7 +37,7 @@ typedef struct findPlayerPack {
 void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     game_t* game = arg;
     player_t* currentPlayer = item;
-    player_serverMapUpdate(currentPlayer, game);
+    player_updateVisibility(currentPlayer, game_returnFullMap(game), game_returnGoldMap(game));
 
     grid_t* visibleGrid = player_getMap(currentPlayer);
     grid_t* visibleGold = player_getVisibleGold(currentPlayer);
