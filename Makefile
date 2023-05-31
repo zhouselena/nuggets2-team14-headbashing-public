@@ -25,7 +25,7 @@ client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 ############## valgrind ##########
 valgrind: client
 #   $(VALGRIND) ./server maps/main.txt
-	$(VALGRIND) ./client 2>player.log plank 35158 "Kyla" 
+ 	$(VALGRIND) ./client 2>player.log plank 35158 "Kyla" 
 
 .PHONY: all clean valgrind 
 
