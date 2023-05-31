@@ -34,4 +34,8 @@ Holding shift while sending any keystroke will allow the player to "run".
 * `common`: all shared modules
 * `support`: provided modules (`message.h`)
 
+### Extra Credit:
+* Player who quits before the end of the game gives up their gold, leaving a new pile at their last location. Another player can pick it up.
+
+
 ## Known Issues
