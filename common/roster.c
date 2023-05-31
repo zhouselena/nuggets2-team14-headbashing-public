@@ -37,7 +37,7 @@ typedef struct findPlayerPack {
 void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     game_t* game = arg;
     player_t* currentPlayer = item;
-    player_serverMapUpdate(currentPlayer, game);
+    player_updateVisibility(currentPlayer, game_returnFullMap(game), game_returnGoldMap(game));
 
     grid_t* visibleGrid = player_getMap(currentPlayer);
     grid_t* visibleGold = player_getVisibleGold(currentPlayer);
@@ -68,11 +68,13 @@ void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) 
  * Appends player name and purse to existing message.
  */
 void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
+    player_t* player = item;
+    if (!message_isAddr(player_getAddr(player))) return;
+
     char** playerSummary = arg;
     char* currentMsg = *playerSummary;
     char* newMsg = malloc(strlen(currentMsg) + 70);
 
-    player_t* player = item;
     sprintf(newMsg, "%s\n%c %7d %s", currentMsg, player_getID(player), player_getGold(player), player_getName(player));
     free(currentMsg);
 

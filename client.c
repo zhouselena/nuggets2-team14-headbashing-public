@@ -237,6 +237,38 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         clrtoeol();      // Clear line
         refresh();       // Refresh the window and continue 
     }
+    // Handle GOLDSTEAL message
+    else if (strncmp(message, "GOLDSTEAL", strlen("GOLDSTEAL")) == 0) {
+        int n; // change of n nugs, if n < 0 then they are the victim
+        int p; // purse has p gold nugs
+        int r; // r gold left to be found
+        char otherPlayID; // other conflicting player
+        sscanf(message, "GOLDSTEAL %d %d %d %c", &n, &p, &r, &otherPlayID);
+
+        // Update the client's gold nuggets
+        clientStruct->goldNuggets = p;
+        clientStruct->totalNuggets = r;
+        
+        // Update status line
+        if (clientStruct->isPlayer) {
+            if (n < 0) {
+                mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). Player '%c' stole %d from you!", clientStruct->playerID, p, r, otherPlayID, n*(-1));  
+            }
+            else if (n > 0) {
+                mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). You stole %d from player '%c'!", clientStruct->playerID, p, r, n, otherPlayID);
+            }
+            else {
+                mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed). Player '%c' is too poor!", clientStruct->playerID, p, r, otherPlayID);
+            }
+            refresh();
+        }
+        else {
+            mvprintw(0, 0, "Spectator: %3d nuggets unclaimed.", r);
+        }
+        
+        // Refresh the screen to display changes
+        refresh();
+    }
     // Handle GOLD message
     else if (strncmp(message, "GOLD", 4) == 0) {
         int n; //inform player it has collected n nuggets
@@ -259,7 +291,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             refresh();
         }
         else {
-            mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
+            mvprintw(0, 0, "Spectator: %3d nuggets unclaimed.", r);
         }
         
         // Refresh the screen to display changes
