@@ -15,7 +15,9 @@ The global `make all` creates the executables `server` and `client`, and directo
 To run server, run `./server [mapFilePath] [optional seed]`. Upon proper execution, it will print out a port number that `client` must refer to.
 
 To run client, server must be running first. Run `./client [hostname] [portnumber] [optional player name to play, or empty to spectate] 2>player.log`.
+
 Both player and spectator may send `Q` at any time to stop participating.
+
 The player may use the following keystrokes to move:
 * `h`: move left
 * `l`: move right
@@ -25,6 +27,7 @@ The player may use the following keystrokes to move:
 * `u`: move diagonally up and right
 * `b`: move diagonally down and left
 * `n`: move diagonally down and right
+
 Holding shift while sending any keystroke will allow the player to "run".
 
 ### Directories:
@@ -33,5 +36,6 @@ Holding shift while sending any keystroke will allow the player to "run".
 
 ## Known Issues
 
-**Memory leaks in `server`**
+**Memory leaks in `server`:**
+
 Server frees most of all malloc'd memory, but has memory leaks anywhere set_iterate is called on a pack data type. Namely, in `roster_getPlayerFromAddr` and `roster_getPlayerFromID`, the data type `findPlayerPack` is not free'd before returning the player. Server also overwrites existing memory in `roster_createGameMessage_Helper` when the "GAME OVER" message is being constructed.
