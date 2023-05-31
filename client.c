@@ -239,7 +239,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
         clrtoeol();      // Clear line
         refresh();       // Refresh the window and continue 
     }
-    // Handle GOLDSTEAL message
+    // EXTRA CREDIT: Handle GOLDSTEAL message
     else if (strncmp(message, "GOLDSTEAL", strlen("GOLDSTEAL")) == 0) {
         int n; // change of n nugs, if n < 0 then they are the victim
         int p; // purse has p gold nugs
