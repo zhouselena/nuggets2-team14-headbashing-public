@@ -1,6 +1,8 @@
 # CS50 Nuggets
 ## Implementation Spec
-### Team 14 - Headbashing, Spring 2023
+### Team 14- Headbashing, Spring 2023
+
+> This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
 
 According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
 Our design also includes `game`, y, z modules.

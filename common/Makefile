@@ -3,7 +3,7 @@
 # This makefile will default build the common.a library.
 # It will also have a clean target that removes files produced by Make.
 #
-# Selena Zhou, Kyla Widodo 23S
+# Team 14- Headbashing; Kyla Widodo, Selena Zhou, 23S
 
 OBJS = player.o set.o grid.o roster.o mem.o gold.o game.o
 LIB = common.a
