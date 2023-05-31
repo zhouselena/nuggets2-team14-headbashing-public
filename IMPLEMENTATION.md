@@ -5,12 +5,16 @@
 > This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
 
 According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
-Our design also includes x, y, z modules.
+Our design also includes `game`, y, z modules.
 We describe each program and module separately.
 We do not describe the `support` library nor the modules that enable features that go beyond the spec.
 We avoid repeating information that is provided in the requirements spec.
 
 ## Plan for division of labor
+
+`client`: Kyla
+
+`server`: Selena
 
 > Update your plan for distributing the project work among your 3(4) team members.
 > Who writes the client program, the server program, each module?

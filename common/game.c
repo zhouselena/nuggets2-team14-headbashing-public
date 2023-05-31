@@ -235,6 +235,7 @@ game_t* game_new(char* mapFileName) {
     game->spectator = message_noAddr();
 
     game->fullMap = grid_fromFile(mapFileName);
+    fprintf(stderr, "%s\n", grid_string(game->fullMap));
     if (game->fullMap == NULL) return NULL;
     game->originalMap = grid_fromFile(mapFileName);
     game->mapRows = grid_nrows(game->fullMap);
