@@ -4,11 +4,6 @@
  * server.c runs the game server that individual clients can connect to.
  * The server initializes the port, and then listens to connections from clients,
  * updating the master game and sending update info to each client.
- * 
- * Exit messages:
- * - (1): incorrect number of arguments
- * - (2): invalid argument
- * - (3): unable to create map grid
  *
  * Selena Zhou, Kyla Widodo, 23S
  */
@@ -56,11 +51,13 @@ int main(const int argc, char* argv[]) {
 
 /**************** functions ****************/
 
-/* parseArgs:
- * Validate arguments, exits nonzero if fails.
+/**************** parseArgs ****************/
+/* Validate arguments, exits nonzero if fails.
  *
- * Caller provides: argc, argv
- * Returns: nothing, exits nonzero if fails.
+ * Exit messages:
+ * - (1): incorrect number of arguments
+ * - (2): invalid argument
+ * - (3): unable to create map grid
  */
 void parseArgs(const int argc, char* argv[]) {
 
@@ -88,8 +85,8 @@ void parseArgs(const int argc, char* argv[]) {
 
 }
 
-/* initializeGame:
- * Initializes game locally. Creates game/grid from map file, sets up random gold piles.
+/**************** initializeGame ****************/
+/* Initializes game locally. Creates game/grid from map file, sets up random gold piles.
  *
  * Caller provides: mapFileName
  * Returns: nothing, exits nonzero if fails.
@@ -103,11 +100,10 @@ void initializeGame(char* mapFileName) {
     }
 
 }
-
-/* handleInput:
- * To be fed into message_loop(). Handles input from stdin.
+/**************** handleInput ****************/
+/* To be passed into message_loop(). Handles input from stdin.
  *
- * Caller provides: void *arg
+ * Caller provides: entered input
  * Returns: true if EOF, false otherwise.
  */
 bool handleInput (void *arg) {
@@ -118,10 +114,10 @@ bool handleInput (void *arg) {
     }
 }
 
-/* handleMessage:
- * To be fed into message_loop(). Calls game functions based on input from client.
+/**************** handleMessage ****************/
+/* To be passed into message_loop(). Calls game functions based on input from client.
  *
- * Caller provides: void *arg, from address, command message
+ * Caller provides: from address, command message
  * Returns: true if server is quitting, false otherwise.
  */
 bool handleMessage(void* arg, const addr_t from, const char* message) {
@@ -140,6 +136,9 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
     return false;
 }
 
+/**************** game_over ****************/
+/* Frees everything from game, calls message_done()
+ */
 void game_over() {
     fprintf(stdout, "Server is shutting down.\n");
     message_done();
