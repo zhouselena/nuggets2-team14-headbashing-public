@@ -11,6 +11,8 @@ Feel free to add your own.
 * `main.txt`: an interesting map for playing and testing.
 * `narrow.txt`: a very narrow map that will fit in a very narrow window; what happens to the top line of your client's display?
 * `small.txt`: a simple, small map; also too-few empty spots.
+* `headbashing.txt`: a duck shaped map, quite tricky in some spots, but large empty spaces as well. Created by headbashing - team 14, 23S
+
 
 Several maps were contributed buy CS50 teams:
 
