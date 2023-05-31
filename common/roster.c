@@ -162,7 +162,9 @@ player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr) {
     playerPack->matchAddress = playerAddr;
     playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromAddr_Helper);
-    return playerPack->foundPlayer;
+    player_t* found = playerPack->foundPlayer;
+    free(playerPack);
+    return found;
 }
 
 /**************** roster_getPlayerFromAddr_Helper ****************/
@@ -185,5 +187,7 @@ player_t* roster_getPlayerFromID(roster_t* roster, char playerID) {
     playerPack->matchPlayerID = playerID;
     playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromID_Helper);
-    return playerPack->foundPlayer;
+    player_t* found = playerPack->foundPlayer;
+    free(playerPack);
+    return found;
 }

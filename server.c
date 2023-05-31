@@ -71,6 +71,7 @@ void parseArgs(const int argc, char* argv[]) {
         fprintf(stderr, "Error: unable to open map file.\n");
         exit(2);
     }
+    fclose(fp);
 
     if (argc == 3) {    // create random seed if no seed provided, or validate provided seed
         int seed;

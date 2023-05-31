@@ -109,7 +109,7 @@ void game_sendOKMessage(player_t* newPlayer, addr_t playerAddr) {
  * Returns: nothing
  */
 void game_sendGridMessage(game_t* game, addr_t player) {
-    char* sendGridMessage = malloc(10);
+    char* sendGridMessage = malloc(strlen("GRID ") + 50);
     sprintf(sendGridMessage, "GRID %d %d", game->mapRows, game->mapCols);
     message_send(player, sendGridMessage);
     free(sendGridMessage);
@@ -186,7 +186,7 @@ void game_sendDisplayMessage(game_t* game, addr_t player) {
         grid_t* sendDisplayGrid = grid_new(game->mapRows, game->mapCols);
         grid_overlay(game->fullMap, game->goldMap, game->fullMap, sendDisplayGrid);
         const char* gridString = grid_string(sendDisplayGrid);
-        char* sendDisplayMsg = malloc(strlen("DISPLAY") + strlen(gridString) + 5);
+        char* sendDisplayMsg = malloc(strlen("DISPLAY\n") + strlen(gridString) + 5);
         sprintf(sendDisplayMsg, "DISPLAY\n%s", gridString);
         message_send(player, sendDisplayMsg);
         free(sendDisplayMsg);

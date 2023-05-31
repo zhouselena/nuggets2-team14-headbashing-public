@@ -38,4 +38,4 @@ Holding shift while sending any keystroke will allow the player to "run".
 
 **Memory leaks in `server`:**
 
-Server frees most of all malloc'd memory, but has memory leaks anywhere set_iterate is called on a pack data type. Namely, in `roster_getPlayerFromAddr` and `roster_getPlayerFromID`, the data type `findPlayerPack` is not free'd before returning the player. Server also overwrites existing memory in `roster_createGameMessage_Helper` when the "GAME OVER" message is being constructed.
+Server frees most of all malloc'd memory, but overwrites existing memory in `roster_createGameMessage_Helper` when the "GAME OVER" message is being constructed.
