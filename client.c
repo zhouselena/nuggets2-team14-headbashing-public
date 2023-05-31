@@ -52,9 +52,6 @@ void initializeNetwork(char* serverHost, char* port, FILE* errorFile, char* play
 static bool handleInput(void* arg);
 static bool handleMessage(void* arg, const addr_t incoming, const char* message);
 
-
-/**************** local functions ****************/
-
 /**************** main ****************/
 int main(const int argc, char* argv[]) {
     clientStruct = calloc(1, sizeof(clientStruct_t));
@@ -222,7 +219,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             refresh();
         }
         else {
-            mvprintw(0, 0, "Spectator: %d nuggets unclaimed. GOLD received: %d", r, n);
+            mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
         }
         
         // Refresh the screen to display changes
@@ -325,7 +322,7 @@ static bool handleInput(void* arg) {
     if (clientStruct->isPlayer) {
         mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed).", clientStruct->playerID, clientStruct->goldNuggets, clientStruct->totalNuggets);
     } else {
-        mvprintw(0, 0, "Spectator: %d nuggets unclaimed. GOLD received: %d", clientStruct->totalNuggets, clientStruct->goldNuggets);
+        mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", clientStruct->totalNuggets);
     }
     
     mem_free(keySend); 
