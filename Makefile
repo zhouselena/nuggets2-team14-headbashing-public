@@ -43,4 +43,7 @@ clean:
 	rm -f *~
 	rm -f TAGS
 	rm -f *.log
+	rm -f *.o
+	rm client
+	rm server
 	make -C common clean
