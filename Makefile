@@ -34,6 +34,7 @@ valgrind: server
 ############## default: make all libs and programs ##########
 all:
 	make -C common
+	make -C support
 	make server
 	make client
 
