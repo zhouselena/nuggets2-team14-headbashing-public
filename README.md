@@ -36,6 +36,6 @@ Holding shift while sending any keystroke will allow the player to "run".
 
 ### Extra Credit:
 * Player who quits before the end of the game gives up their gold, leaving a new pile at their last location. Another player can pick it up.
-
+* Allow players to steal gold from other players by stepping onto them.  Optionally alert players when they "hear someone coming.
 
 ## Known Issues
