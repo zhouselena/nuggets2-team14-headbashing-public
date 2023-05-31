@@ -1,6 +1,6 @@
 # CS50 Nuggets
 ## Implementation Spec
-### Team name, term, year
+### Team 14- Headbashing, Spring 2023
 
 > This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
 

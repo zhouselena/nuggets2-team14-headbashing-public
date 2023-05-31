@@ -1,13 +1,13 @@
 /* 
- * client.c     team 14 - headbashing     May 20, 2023
+ * client.c     Team 14 - headbashing     May 20, 2023
  *
  * Handles the client side of the game. 
  * 
- * usage: ./client hostname port [playername]
- *   hostname is the IP address that the server's running on
- *   port is the number which the server listens for messages on
- *   playername, if provided, the client joins as a player
- *                 if not provided, the client joins as a view-only spectator
+ * Usage: ./client hostname port [playername]
+ *   hostname = IP address that the server's running on
+ *   port = number which the server listens for messages on
+ *   playername, if provided = client joins as a player
+ *               if not provided = client joins as a view-only spectator
  *
  */
 
@@ -21,8 +21,6 @@
 #include "support/message.h"
 #include "common/grid.h"
 #include "common/player.h"
-#include <ctype.h> 
-
 
 /**************** global integer ****************/
 #define MAX_PLAYER_NAME_LENGTH 50
@@ -54,9 +52,10 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 
 /**************** main ****************/
 /*
-* Main function of client side of game. Allocates memory for the clientStruct and calls other functions to parse command line arguments,
-* initialize game display, and set up network communication. 
-* Cleans up by freeing the allocated memory and shutting down the program.
+* Main function of client side of game. Allocates memory for the clientStruct and calls other functions to parse command line arguments, initialize game display, and set up network communication. 
+* 
+* Caller provides: Command-line arguments argc and argv[].
+* Returns: An integer representing the exit status of the program.
 */
 int main(const int argc, char* argv[]) {
     clientStruct = calloc(1, sizeof(clientStruct_t));
@@ -84,6 +83,9 @@ int main(const int argc, char* argv[]) {
 /*
  * Checks the validity of command-line arguments and initializes the clientStruct accordingly. 
  * If a player name is provided, the client is set to be a player; otherwise, it is set to be a spectator.
+ *
+ * Caller provides: Command-line arguments argc and argv[].
+ * Returns: Nothing.
  */
 static void parseArgs(const int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
@@ -107,6 +109,9 @@ static void parseArgs(const int argc, char* argv[]) {
 /*
  * Initializes display window for the game using the ncurses library.
  * Includes starting ncurses mode, creating a window, setting keyboard mapping, and setting up color pairs for the display
+ *
+ * Caller provides: Nothing
+ * Returns: Nothing
  */
 void initializeDisplay() {
     //Start ncurses mode; create windoe
@@ -129,9 +134,11 @@ void initializeDisplay() {
 
 /**************** initializeDisplay() ****************/
 /*
- * Set up network communication for client
- * Constructs initial message to the server, sets up server address, and send initial message to the server
+ * Set up network communication for client. Constructs initial message to the server, sets up server address, and send initial message to the server
  * Starts the message loop. Exit non-zero if any of these set ups and loops fail.
+
+ * Caller provides: Server hostname serverHost, port number port, and player name playerName (optional).
+ * Returns: Nothing
  */
 void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerName) {
     // For the client to server message
@@ -197,7 +204,8 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 /* 
  * Handles the messages received from the server.
  * Parses and responds to keyword: "OK", "GRID", "GOLD", "DISPLAY", "QUIT", "ERROR"
- * Takes in arg, server address
+ *
+ * Returns: boolean value indicating whether to continue processing messages.
  */
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
     //Handle OK message 
@@ -331,6 +339,9 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 /**************** handleInput() ****************/
 /* 
  * Handles user key presses. Function reads the key pressed by the user and sends a corresponding message to the server
+ * 
+ * Caller provides: void pointer arg (can be NULL)
+ * Returns: boolean value to continue input loop.
  */
 static bool handleInput(void* arg) {
     // Allocate a buffer for the key press.
