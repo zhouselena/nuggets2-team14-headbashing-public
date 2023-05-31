@@ -247,6 +247,17 @@ game_t* game_new(char* mapFileName) {
     return game;
 }
 
+/**************** game_delete ****************/
+/* see game.h for description */
+void game_delete(game_t* game) {
+    roster_delete(game->players);
+    grid_delete(game->originalMap);
+    grid_delete(game->fullMap);
+    grid_delete(game->goldMap);
+    gold_delete(game->goldNuggets);
+    free(game);
+}
+
 /**************** end_game ****************/
 /* see game.h for description */
 void end_game(game_t* game) {
@@ -256,9 +267,7 @@ void end_game(game_t* game) {
     if (message_isAddr(game->spectator)) {
         message_send(game->spectator, summary);
     }
-    free(summary);
-    // free everything in game
-    
+    free(summary);    
 }
 
 /* receive input */
@@ -455,6 +464,7 @@ bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
      *           game_updateAllUsers 
      */
 }
+
 bool game_l_moveRight(game_t* game, addr_t player, const char* message) {
 
     if (message_eqAddr(game->spectator, player)) {
@@ -801,6 +811,201 @@ bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
     return false;
 }
 
+/**************** game_[CAPITALKEY]_move[DIRECTION] ****************/
+/* see game.h for description */
+
+bool game_H_moveLeft(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer);
+    int pCol = player_getXLocation(calledPlayer)-1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_h_moveLeft(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer);
+        pCol = player_getXLocation(calledPlayer)-1;
+    }
+
+    return false;
+
+}
+
+bool game_L_moveRight(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer);
+    int pCol = player_getXLocation(calledPlayer)+1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_l_moveRight(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer);
+        pCol = player_getXLocation(calledPlayer)+1;
+    }
+
+    return false;
+
+}
+
+bool game_J_moveDown(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+    
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)+1;
+    int pCol = player_getXLocation(calledPlayer);
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_j_moveDown(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)+1;
+        pCol = player_getXLocation(calledPlayer);
+    }
+
+    return false;
+
+}
+
+bool game_K_moveUp(game_t* game, addr_t player, const char* message) {
+
+    if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)-1;
+    int pCol = player_getXLocation(calledPlayer);
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_k_moveUp(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)-1;
+        pCol = player_getXLocation(calledPlayer);
+    }
+
+    return false;
+
+}
+
+bool game_Y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
+        
+        if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)-1;
+    int pCol = player_getXLocation(calledPlayer)-1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_y_moveDiagUpLeft(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)-1;
+        pCol = player_getXLocation(calledPlayer)-1;
+    }
+
+    return false;
+
+}
+
+bool game_U_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
+        
+        if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)-1;
+    int pCol = player_getXLocation(calledPlayer)+1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_u_moveDiagUpRight(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)-1;
+        pCol = player_getXLocation(calledPlayer)+1;
+    }
+
+    return false;
+
+}
+
+bool game_B_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
+        
+        if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)+1;
+    int pCol = player_getXLocation(calledPlayer)-1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_b_moveDiagDownLeft(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)+1;
+        pCol = player_getXLocation(calledPlayer)-1;
+    }
+
+    return false;
+
+}
+
+bool game_N_moveDiagDownRight(game_t* game, addr_t player, const char* message) {
+        
+        if (message_eqAddr(game->spectator, player)) {
+        message_send(player, "ERROR unknown keystroke for spectator.");
+        return false;
+    }
+    
+    player_t* calledPlayer = roster_getPlayerFromAddr(game->players, player);
+
+    int pRow = player_getYLocation(calledPlayer)+1;
+    int pCol = player_getXLocation(calledPlayer)+1;
+
+    while (grid_isSpot(game->fullMap, pRow, pCol)) {
+        if (game_n_moveDiagDownRight(game, player, message)) {
+            return true;
+        }
+        pRow = player_getYLocation(calledPlayer)+1;
+        pCol = player_getXLocation(calledPlayer)+1;
+    }
+
+    return false;
+
+}
+
 /**************** game_keyPress ****************/
 /* see game.h for description */
 bool game_keyPress(game_t* game, addr_t player, const char* message) {
@@ -830,6 +1035,24 @@ bool game_keyPress(game_t* game, addr_t player, const char* message) {
             return game_b_moveDiagDownLeft(game, player, message);
         case 'n':
             return game_n_moveDiagDownRight(game, player, message);
+        
+        case 'H':
+            return game_H_moveLeft(game, player, message);
+        case 'L':
+            return game_L_moveRight(game, player, message);
+        case 'J':
+            return game_J_moveDown(game, player, message);
+        case 'K':
+            return game_K_moveUp(game, player, message);
+        case 'Y':
+            return game_Y_moveDiagUpLeft(game, player, message);
+        case 'U':
+            return game_U_moveDiagUpRight(game, player, message);
+        case 'B':
+            return game_B_moveDiagDownLeft(game, player, message);
+        case 'N':
+            return game_N_moveDiagDownRight(game, player, message);
+
         default:
             message_send(player, "ERROR unknown keystroke.");
             return false;

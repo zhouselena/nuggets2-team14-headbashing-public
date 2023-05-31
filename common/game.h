@@ -33,6 +33,13 @@ typedef struct game game_t;
  */
 game_t* game_new(char* mapFileName);
 
+
+/**************** game_delete ****************/
+/* Frees all information game holds and deletes game.
+ */
+void game_delete(game_t* game);
+
+
 /**************** end_game ****************/
 /* To be called once remaining gold becomes 0. Sends a GAME OVER summary to all clients.
  *
@@ -93,6 +100,21 @@ bool game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message);
 bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message);
 bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message);
 bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message);
+
+/**************** game_[CAPITALKEY]_move[DIRECTION] ****************/
+/* Called when server receives 'KEY [HLJKYUBN]' from client.
+ * Will keep calling game_[KEY]_move[DIRECTION] function until can't move anymore.
+ * Returns what is returned from game_[KEY]_move[DIRECTION].
+ */
+
+bool game_H_moveLeft(game_t* game, addr_t player, const char* message);
+bool game_L_moveRight(game_t* game, addr_t player, const char* message);
+bool game_J_moveDown(game_t* game, addr_t player, const char* message);
+bool game_K_moveUp(game_t* game, addr_t player, const char* message);
+bool game_Y_moveDiagUpLeft(game_t* game, addr_t player, const char* message);
+bool game_U_moveDiagUpRight(game_t* game, addr_t player, const char* message);
+bool game_B_moveDiagDownLeft(game_t* game, addr_t player, const char* message);
+bool game_N_moveDiagDownRight(game_t* game, addr_t player, const char* message);
 
 /**************** game_keyPress ****************/
 /* Called when server receives 'KEY [keystroke]' from client.
