@@ -75,7 +75,7 @@ void gold_addGoldPile(gold_t* gold, int row, int col, int nuggets) {
 void gold_foundPile_Helper(void* arg, const char* key, void* item) {
     findGoldPile_t* goldInfoPack = arg;
     goldPile_t* currentPile = item;
-    if (currentPile->goldRow == goldInfoPack->findRow && currentPile->goldCol == goldInfoPack->findCol) {
+    if (currentPile->collected == 0 && currentPile->goldRow == goldInfoPack->findRow && currentPile->goldCol == goldInfoPack->findCol) {
         currentPile->collected = 1;
         goldInfoPack->matchedPile = currentPile;
     }
