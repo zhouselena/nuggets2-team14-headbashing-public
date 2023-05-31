@@ -1,14 +1,15 @@
 /* 
- * client.c     Team 14 - headbashing     May 20, 2023
  *
  * Handles the client side of the game. 
  * 
+ * server.c runs the game server that individual clients can connect to.
  * Usage: ./client hostname port [playername]
  *   hostname = IP address that the server's running on
  *   port = number which the server listens for messages on
  *   playername, if provided = client joins as a player
  *               if not provided = client joins as a view-only spectator
- *
+ * 
+ * Selena Zhou, Kyla Widodo, 23S
  */
 
 #include <stdio.h>
@@ -58,20 +59,21 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 * Returns: An integer representing the exit status of the program.
 */
 int main(const int argc, char* argv[]) {
-    clientStruct = calloc(1, sizeof(clientStruct_t));
+    clientStruct = calloc(1, sizeof(clientStruct_t)); //Allocate memory of data struct
     if (!clientStruct) {
         fprintf(stderr, "Memory allocation failed.\n");
         exit(1);
     }    
 
-    parseArgs(argc, argv);
-    initializeDisplay();
-    initializeNetwork(argv[1], argv[2], stderr, clientStruct->isPlayer ? clientStruct->playername : NULL);
+    parseArgs(argc, argv); //Parse the incoming arguments
+    initializeDisplay(); //Initialize the ncurses and window
+    initializeNetwork(argv[1], argv[2], stderr, clientStruct->isPlayer ? clientStruct->playername : NULL); //Initialize the connection, message_send, and message_loop
     
     // Shutting down program
-    delwin(clientStruct->clientwindow);  
-    endwin(); 
+    delwin(clientStruct->clientwindow);  //Delete the window
+    endwin(); //end ncurses
     
+    //Freeing memory
     mem_free(clientStruct->playerID);
     mem_free(clientStruct->playername);
     mem_free(clientStruct);
@@ -88,12 +90,12 @@ int main(const int argc, char* argv[]) {
  * Returns: Nothing.
  */
 static void parseArgs(const int argc, char* argv[]) {
-    if (argc < 3 || argc > 4) {
+    if (argc < 3 || argc > 4) { //If the usage is incorect
         fprintf(stderr, "Invalid arguments; Usage: ./client hostname port [player_name]\n");
-        exit(2);
+        exit(2); //Exit program
     }
     else {
-        if (argc == 4) {
+        if (argc == 4) { //
             clientStruct->isPlayer = true;
             strncpy(clientStruct->playername, argv[3], MAX_PLAYER_NAME_LENGTH - 1);
             clientStruct->playername[MAX_PLAYER_NAME_LENGTH - 1] = '\0';

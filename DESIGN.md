@@ -49,7 +49,7 @@ Output:
 
 ### Pseudo code for logic/algorithmic flow
 The client will run as follows:
-    ```
+```
     parses command line for number of arguments
     validate arguments 
     if arguments are valid:
@@ -78,57 +78,54 @@ The client will run as follows:
     else:
         print "Invalid command line arguments"
         exit with non zero
-    ```
+```
 We anticipate the following major functions:
 #### main()
 Initializes client structure, parses command-line arguments, initializes display, sets up network connection, enters game loop, and performs cleanup when the game is over.
-
-    ```
-        Allocate memory for client structure
-        parse args
-        initialize display and network
-        enter the game loop
-            process server messages or handle the user inputs
-        delete the window
-        free allocated memory
-        end game
-    ```
+```
+    Allocate memory for client structure
+    parse args
+    initialize display and network
+    enter the game loop
+        process server messages or handle the user inputs
+    delete the window
+    free allocated memory
+    end game
+```
 
 #### parseArgs(): 
 Checks the validity of command-line arguments and initializes the client structure accordingly.
-
-    ```c
+``` 
     check the validity of command-line arguments
     initialize the clientStruct accordingly
-    ```
+```
 
 #### initializeDisplay():
 Sets up the game display.
 
-    ```c
-        Start ncurses mode and create window
-        Set keyboard mapping and dont display the key press 
-        Create window for displaying the game
-        Refresh the screen to display changes
-    ```
+```
+    Start ncurses mode and create window
+    Set keyboard mapping and dont display the key press 
+    Create window for displaying the game
+    Refresh the screen to display changes
+```
 
 #### initializeNetwork():
 Sets up the network connection, sends the initial message to the server, and starts the message loop.
 
-	```c
-		For the client to server message
-		if player name is NULL or empty, client is a spectator. Otherwise, player
-		Convert port to string
-		set up server details using hostname and port
-		Initialize the message server
-		Join the server
-		Start message loop
-	```
+```
+    For the client to server message
+    if player name is NULL or empty, client is a spectator. Otherwise, player
+    Convert port to string
+    set up server details using hostname and port
+    Initialize the message server
+    Join the server
+    Start message loop
+```
 
 #### handleMessage():
 Handles messages received from the server, updates the game state, and refreshes the display.
-
-	```c
+```
 	Handle OK message
 	Handle GRID message
 	Handle GOLD message
@@ -136,15 +133,15 @@ Handles messages received from the server, updates the game state, and refreshes
 	Handle QUIT message
 	Handle ERROR message
 	Handle Unknown/ Misordered message
-	```
+```
 
 #### handleInput():
 Handles user key presses and sends corresponding messages to the server.
 
-	```c
+```
 	read the key pressed by the user
 	send a corresponding message to the server
-	```
+```
 
 ### Major data structures
 
@@ -180,7 +177,7 @@ Output:
 ### Pseudo code for logic/algorithmic flow
 The server will run as follows:
 ```
-parses to validate command line for number of arguments
+    parses to validate command line for number of arguments
 	initializeGame using the map file
 	initialize the message module and print the port number
 	call message_loop to await messages from clients:
@@ -491,62 +488,61 @@ The Roster module manages a set of players in the game.
 
 ### Pseudo Code for Logic/Algorithmic Flow
 #### roster_new()
-    ```
-        allocate memory for new roster
-        if memory allocation is successful
-            create a new set for players
-        return the new roster
-    ```
+```
+    allocate memory for new roster
+    if memory allocation is successful
+        create a new set for players
+    return the new roster
+```
 #### roster_addPlayer()
-    ```
-        get the player ID
-        insert the new player into the roster set
-        return the result of the insertion operation
-    ```
+```
+    get the player ID
+    insert the new player into the roster set
+    return the result of the insertion operation
+```
 #### roster_updateAllPlayers()
-    ```
-    iterate over the players set with the update helper function
-    ```
-
+```
+iterate over the players set with the update helper function
+```
 #### roster_updateAllPlayersGold()
-    ```
-    iterate over the players set with the gold update helper function
-    ```
+```
+iterate over the players set with the gold update helper function
+```
 #### roster_createGameMessage()
-    ```
-        allocate memory for game over message
-        format the game over message
-        iterate over the players set 
-        iterate over the players set again to send the game over message
-        return the game over message
-    ```
+```
+    allocate memory for game over message
+    format the game over message
+    iterate over the players set 
+    iterate over the players set again to send the game over message
+    return the game over message
+```
 #### roster_delete() 
-    ```
-        delete the players set with the delete helper function
-        free the roster
-    ```
+```
+    delete the players set with the delete helper function
+    free the roster
+```
 #### roster_getPlayerFromAddr()
-    ```
-        allocate memory for find player pack
-        if memory allocation is successful
-            set the address to be found
-            set the found player to null
-            iterate over the players set with the address helper function
-            get the found player from the find player pack
-            free the find player pack
-        return the found player
-    ```
+```
+    allocate memory for find player pack
+    if memory allocation is successful
+        set the address to be found
+        set the found player to null
+        iterate over the players set with the address helper function
+        get the found player from the find player pack
+        free the find player pack
+    return the found player
+```
 #### roster_getPlayerFromID()
-    ```
-        allocate memory for find player pack
-        if memory allocation is successful
-            set the ID to be found
-            set the found player to null
-            iterate over the players set with the ID helper function
-            get the found player from the find player pack
-            free the find player pack
-        return the found player
-    ```
+```
+    allocate memory for find player pack
+    if memory allocation is successful
+        set the ID to be found
+        set the found player to null
+        iterate over the players set with the ID helper function
+        get the found player from the find player pack
+        free the find player pack
+    return the found player
+```
 
 ### Major Data Structure
 It contains the following key structures:
