@@ -10,6 +10,7 @@ LLIBS = $C/common.a $S/support.a
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS)
 CC = gcc
 MAKE = make
+VALGRIND = valgrind --leak-check=full --show-leak-kinds=all
 
 server: server.o $(LLIBS)
 	$(CC) $(CFLAGS) $^ -lm $(LIBS) -o $@
@@ -22,15 +23,18 @@ client: client.o $(LLIBS)
 client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 
 ############## valgrind ##########
-valgrind:
-#   valgrind --leak-check=full --show-leak-kinds=all ./server
-	valgrind --leak-check=full --show-leak-kinds=all ./client 
+valgrind: server
+#  	valgrind --leak-check=full --show-leak-kinds=all ./server maps/small.txt
+#	valgrind --leak-check=full --show-leak-kinds=all ./client
+	$(VALGRIND) ./server maps/small.txt
+
 
 .PHONY: all clean valgrind 
 
 ############## default: make all libs and programs ##########
 all:
 	make -C common
+	make -C support
 	make server
 	make client
 

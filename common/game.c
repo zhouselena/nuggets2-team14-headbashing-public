@@ -232,6 +232,7 @@ game_t* game_new(char* mapFileName) {
 
     game->players = roster_new();
     if (game->players == NULL) return NULL;
+    game->spectator = message_noAddr();
 
     game->fullMap = grid_fromFile(mapFileName);
     if (game->fullMap == NULL) return NULL;
