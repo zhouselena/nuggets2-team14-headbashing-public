@@ -219,6 +219,9 @@ void game_updateAllUsers(game_t* game) {
 }
 
 /* EXTRA CREDIT: game_stealGold
+ * Given two players who are crossing spots, shifts one gold nugget from one player's purse to the other's.
+ * Sends message to client that gold has been stolen.
+ * If the victim (person losing the gold) has no nuggets already, sends 0 message to client meaning no gold stolen.
  */
 void game_stealGold(game_t* game, player_t* thief, player_t* victim) {
     // If victim doesn't have any gold nuggets
