@@ -263,7 +263,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             refresh();
         }
         else {
-            mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
+            mvprintw(0, 0, "Spectator: %3d nuggets unclaimed.", r);
         }
         
         // Refresh the screen to display changes
@@ -291,7 +291,7 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             refresh();
         }
         else {
-            mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", r);
+            mvprintw(0, 0, "Spectator: %3d nuggets unclaimed.", r);
         }
         
         // Refresh the screen to display changes
