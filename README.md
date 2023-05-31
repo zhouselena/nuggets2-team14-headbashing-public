@@ -9,6 +9,8 @@ Each player is randomly dropped into a room when joining the game.
 Players move about, collecting nuggets when they move onto a pile.
 When all gold nuggets are collected, the game ends and a summary is printed.
 
+For more detailed information on design and implementation, please refer to `DESIGN.md` and `IMPLEMENTATION.md`. For our team's scrum, please check this repository's wiki.
+
 ### Usage
 The global `make all` creates the executables `server` and `client`, and directories `common` and `support` required by the executables. Specific information can be found in each directories respective `README.md`'s.
 
@@ -33,5 +35,13 @@ Holding shift while sending any keystroke will allow the player to "run".
 ### Directories:
 * `common`: all shared modules
 * `support`: provided modules (`message.h`)
+* `maps`: provided map files, and the map file we created (`headbashing.txt`)
 
-## Known Issues
+### Extra Credit
+1. If a player quits the game, any gold they had collected will be released back to the game in a pile at their last position.
+2. Players may steal gold nuggets from each other. If player 'X' steps on player 'Y', player 'Y' will lose 1 gold nugget and receive a message, and player 'X' will gain 1 gold nugget and receive a message. If player 'Y' didn't have any gold in their purse, player 'X' will receive a message to let them know they couldn't steal from player 'Y'. Finally, player 'X' and player 'Y' will switch places as usual.
+
+### Known Issues
+
+**No resetting player ID's in `server`:**
+If a player quits, their player ID is never reused, meaning that the 27th player who joins after a previous player quits normally will get a non-alpha character. Then the switch conflicting player functionality will not work if another player tries to switch with the player with non-alpha ID.
