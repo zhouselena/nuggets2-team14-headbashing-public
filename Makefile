@@ -29,8 +29,6 @@ valgrind: client
 #   $(VALGRIND) ./server maps/main.txt
 	$(VALGRIND) ./client 2>player.log plank 44753 "Kyla" 
 
-
-
 .PHONY: all clean valgrind 
 
 ############## default: make all libs and programs ##########

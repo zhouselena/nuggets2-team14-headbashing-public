@@ -21,7 +21,7 @@
 #include "support/message.h"
 #include "common/grid.h"
 #include "common/player.h"
-#include <ctype.h> // needed for isgraph() and isblank()
+#include <ctype.h> 
 
 
 /**************** global integer ****************/
@@ -53,6 +53,11 @@ static bool handleInput(void* arg);
 static bool handleMessage(void* arg, const addr_t incoming, const char* message);
 
 /**************** main ****************/
+/*
+* Main function of client side of game. Allocates memory for the clientStruct and calls other functions to parse command line arguments,
+* initialize game display, and set up network communication. 
+* Cleans up by freeing the allocated memory and shutting down the program.
+*/
 int main(const int argc, char* argv[]) {
     clientStruct = calloc(1, sizeof(clientStruct_t));
     if (!clientStruct) {
@@ -76,7 +81,9 @@ int main(const int argc, char* argv[]) {
 }
 
 /**************** parseArgs() ****************/
-/* 
+/*
+ * Checks the validity of command-line arguments and initializes the clientStruct accordingly. 
+ * If a player name is provided, the client is set to be a player; otherwise, it is set to be a spectator.
  */
 static void parseArgs(const int argc, char* argv[]) {
     if (argc < 3 || argc > 4) {
@@ -95,6 +102,12 @@ static void parseArgs(const int argc, char* argv[]) {
     }
 }
 
+
+/**************** initializeDisplay() ****************/
+/*
+ * Initializes display window for the game using the ncurses library.
+ * Includes starting ncurses mode, creating a window, setting keyboard mapping, and setting up color pairs for the display
+ */
 void initializeDisplay() {
     //Start ncurses mode; create windoe
     WINDOW* newwin = initscr();
@@ -114,6 +127,12 @@ void initializeDisplay() {
     refresh();
 }
 
+/**************** initializeDisplay() ****************/
+/*
+ * Set up network communication for client
+ * Constructs initial message to the server, sets up server address, and send initial message to the server
+ * Starts the message loop. Exit non-zero if any of these set ups and loops fail.
+ */
 void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerName) {
     // For the client to server message
     char* playMessage = (char*)malloc(message_MaxBytes * sizeof(char));
@@ -163,7 +182,7 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     // Shut down the message module
     message_done();
     
-       if (!ok) {
+    if (!ok) {
         fprintf(stderr, "Error: message_loop failed.\n");
         mem_free(playMessage); 
         mem_free(clientStruct);
@@ -175,6 +194,9 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 
 /**************** handleMessage() ****************/
 /* 
+ * Handles the messages received from the server.
+ * Parses and responds to keyword: "OK", "GRID", "GOLD", "DISPLAY", "QUIT", "ERROR"
+ * Takes in arg, server address
  */
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
     //Handle OK message 
@@ -304,6 +326,10 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
     return false;
 }
 
+/**************** handleInput() ****************/
+/* 
+ * Handles user key presses. Function reads the key pressed by the user and sends a corresponding message to the server
+ */
 static bool handleInput(void* arg) {
     // Allocate a buffer for the key press.
     char* keySend = mem_malloc(10);
@@ -324,7 +350,7 @@ static bool handleInput(void* arg) {
         mem_free(keySend); 
     }
 
-    // Reset the status line to the original message
+    // Reset status line to original message
     if (clientStruct->isPlayer) {
         mvprintw(0, 0, "Player %s has %d nuggets (%d nuggets unclaimed).", clientStruct->playerID, clientStruct->goldNuggets, clientStruct->totalNuggets);
     } else {
