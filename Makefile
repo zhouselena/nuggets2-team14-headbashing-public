@@ -23,10 +23,12 @@ client: client.o $(LLIBS)
 client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 
 ############## valgrind ##########
-valgrind: server
+valgrind: client
 #  	valgrind --leak-check=full --show-leak-kinds=all ./server maps/small.txt
 #	valgrind --leak-check=full --show-leak-kinds=all ./client
-	$(VALGRIND) ./server maps/main.txt
+#   $(VALGRIND) ./server maps/main.txt
+	$(VALGRIND) ./client 2>player.log plank 44753 "Kyla" 
+
 
 
 .PHONY: all clean valgrind 
