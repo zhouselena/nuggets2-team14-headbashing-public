@@ -157,11 +157,13 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 
     if (!message_setAddr(server, portStr, &(clientStruct->serverAddr))) {
         fprintf(stderr, "Error: Invalid hostname or port number.\n");
+        free(playMessage);
         exit(4);
     }
 
     if (!message_isAddr(clientStruct->serverAddr)) {
         fprintf(stderr, "Error: Failed to setup server address.\n");
+        free(playMessage);
         exit(5);
     }
 
@@ -169,11 +171,13 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     if (message_init(errorFile) == 0) {
         // error occurred while initializing the client's connection
         fprintf(stderr, "Error: Unable to initialize client connection\n");
+        free(playMessage);
         exit(6);
     }
 
     // Join the server
     message_send(clientStruct->serverAddr, playMessage);
+    mem_free(playMessage);
 
     // Loop, waiting for input or for messages; provide callback functions.
     // We use the 'arg' parameter to carry a pointer to 'server'.
@@ -184,11 +188,8 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     
     if (!ok) {
         fprintf(stderr, "Error: message_loop failed.\n");
-        mem_free(playMessage); 
-        mem_free(clientStruct);
         exit(1);
     }
-    mem_free(playMessage);
 
 }
 
@@ -201,7 +202,7 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
 static bool handleMessage(void* arg, const addr_t incoming, const char* message) {
     //Handle OK message 
     if (strncmp(message, "OK", 2) == 0) {
-        char* ID = mem_malloc(2);  // Allocate an extra byte for the null terminator.
+        char* ID = mem_malloc(5);  // Allocate an extra byte for the null terminator.
         sscanf(message, "OK %1s", ID);  // Read at most 1 characters into ID.
         ID[1] = '\0';  // Explicitly null-terminate the string.
         clientStruct->playerID = ID;
@@ -293,7 +294,8 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
 
         printf("%s\n", quitMessage); //Print message
 
-        mem_free(quitMessage);  
+        mem_free(quitMessage);
+        mem_free(clientStruct->playerID);
         mem_free(clientStruct);
         message_done(); //ends the message loop
         exit(0);  // Stop processing further messages -- exits the prgram
