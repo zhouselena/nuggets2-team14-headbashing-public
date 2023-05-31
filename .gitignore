@@ -29,4 +29,4 @@ Icon?
 client
 server
 .nfs*
-player.log
+*.log
