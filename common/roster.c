@@ -69,9 +69,15 @@ void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) 
  */
 void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
     char** playerSummary = arg;
+    char* currentMsg = *playerSummary;
+    char* newMsg = malloc(strlen(currentMsg) + 70);
+
     player_t* player = item;
-    sprintf(*playerSummary, "%s\n%c %7d %s", *playerSummary, player_getID(player), player_getGold(player), player_getName(player));
-    arg = &playerSummary;
+    sprintf(newMsg, "%s\n%c %7d %s", currentMsg, player_getID(player), player_getGold(player), player_getName(player));
+    free(currentMsg);
+
+    *playerSummary = newMsg;
+    arg = playerSummary;
 }
 
 /**************** roster_createGameMessage_sendHelper ****************/

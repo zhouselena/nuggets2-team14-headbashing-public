@@ -26,7 +26,7 @@ client.o: $C/grid.h $C/player.h $C/mem.h $S/message.h
 valgrind: server
 #  	valgrind --leak-check=full --show-leak-kinds=all ./server maps/small.txt
 #	valgrind --leak-check=full --show-leak-kinds=all ./client
-	$(VALGRIND) ./server maps/main.txt
+	$(VALGRIND) ./server maps/small.txt
 
 
 .PHONY: all clean valgrind 
