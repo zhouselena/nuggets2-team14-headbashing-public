@@ -48,6 +48,11 @@ void roster_updateAllPlayersGold(roster_t* roster, game_t* fullMap);
  */
 char* roster_createGameMessage(roster_t* roster);
 
+/**************** roster_delete ****************/
+/* Frees all information and deletes roster.
+ */
+void roster_delete(roster_t* roster);
+
 /* get player from info functions */
 
 player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr);

@@ -84,6 +84,12 @@ void roster_createGameMessage_sendHelper(void* arg, const char* key, void* item)
     message_send(player_getAddr(player), message);
 }
 
+/**************** roster_delete_helper ****************/
+void roster_delete_helper(void* item) {
+    player_t* currPlayer = item;
+    player_delete(currPlayer);
+}
+
 /**************** functions ****************/
 
 /**************** roster_new ****************/
@@ -126,6 +132,13 @@ char* roster_createGameMessage(roster_t* roster) {
     set_iterate(roster->players, &message, roster_createGameMessage_Helper);
     set_iterate(roster->players, message, roster_createGameMessage_sendHelper);
     return message;
+}
+
+/**************** roster_delete ****************/
+/* see roster.h for description */
+void roster_delete(roster_t* roster) {
+    set_delete(roster->players, roster_delete_helper);
+    free(roster);
 }
 
 /* get player from info functions */

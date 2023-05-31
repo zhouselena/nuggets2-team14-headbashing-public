@@ -247,6 +247,17 @@ game_t* game_new(char* mapFileName) {
     return game;
 }
 
+/**************** game_delete ****************/
+/* see game.h for description */
+void game_delete(game_t* game) {
+    roster_delete(game->players);
+    grid_delete(game->originalMap);
+    grid_delete(game->fullMap);
+    grid_delete(game->goldMap);
+    gold_delete(game->goldNuggets);
+    free(game);
+}
+
 /**************** end_game ****************/
 /* see game.h for description */
 void end_game(game_t* game) {
@@ -256,9 +267,7 @@ void end_game(game_t* game) {
     if (message_isAddr(game->spectator)) {
         message_send(game->spectator, summary);
     }
-    free(summary);
-    // free everything in game
-    
+    free(summary);    
 }
 
 /* receive input */

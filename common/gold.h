@@ -41,4 +41,9 @@ void gold_addGoldPile(gold_t* gold, int row, int col, int nuggets);
  */
 int gold_foundPile(gold_t* gold, int row, int col);
 
+/**************** gold_delete ****************/
+/* Frees memory taken by gold and deletes gold.
+ */
+void gold_delete(gold_t* gold);
+
 #endif // __GOLD_H

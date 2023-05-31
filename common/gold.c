@@ -93,3 +93,16 @@ int gold_foundPile(gold_t* gold, int row, int col) {
     return foundPile->numNuggets;
 
 }
+
+/**************** gold_delete_helper ****************/
+void gold_delete_helper(void* item) {
+    goldPile_t* currPile = item;
+    free(currPile);
+}
+
+/**************** gold_delete ****************/
+/* see gold.h for description */
+void gold_delete(gold_t* gold) {
+    set_delete(gold->piles, gold_delete_helper);
+    free(gold);
+}

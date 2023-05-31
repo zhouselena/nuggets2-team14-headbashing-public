@@ -20,7 +20,7 @@ static char nextPlayer = 'A';            // to create unique ID
 /**************** global types ****************/
 
 typedef struct player {
-    addr_t playerAddress;
+    addr_t playerAddress;           // player address
     char playerID;                  // unique ID starting from A, B, C...
     char* playerName;               // player real name that client inputs
     int playerXLocation;            // player location x value
@@ -58,6 +58,8 @@ player_t* player_new() {
 /* see player.h for description */
 void player_delete(player_t* player) {
     free(player->playerName);
+    grid_delete(player->visibleMap);
+    grid_delete(player->visibleGold);
     free(player);
 }
 

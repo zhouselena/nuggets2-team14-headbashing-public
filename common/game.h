@@ -33,6 +33,13 @@ typedef struct game game_t;
  */
 game_t* game_new(char* mapFileName);
 
+
+/**************** game_delete ****************/
+/* Frees all information game holds and deletes game.
+ */
+void game_delete(game_t* game);
+
+
 /**************** end_game ****************/
 /* To be called once remaining gold becomes 0. Sends a GAME OVER summary to all clients.
  *

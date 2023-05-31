@@ -140,6 +140,7 @@ bool handleMessage(void* arg, const addr_t from, const char* message) {
 /* Frees everything from game, calls message_done()
  */
 void game_over() {
+    game_delete(game);
     fprintf(stdout, "Server is shutting down.\n");
     message_done();
 }
