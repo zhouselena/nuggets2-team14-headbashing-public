@@ -14,8 +14,6 @@
 #include "../support/message.h"
 #include "game.h"
 
-/**************** file-local global variables ****************/
-
 /**************** global types ****************/
 
 typedef struct roster {
@@ -28,25 +26,14 @@ typedef struct findPlayerPack {
     player_t* foundPlayer;
 } findPlayerPack_t;
 
-/**************** functions ****************/
+/**************** file local helper functions ****************/
+/* opaque to those outside of the file*/
 
-roster_t* roster_new() {
-
-    roster_t* roster = malloc(sizeof(roster_t));
-    if (roster == NULL) return NULL;
-
-    roster->players = set_new();
-    return roster;
-
-}
-
-bool roster_addPlayer(roster_t* roster, player_t* player) {
-    char playerID = player_getID(player);
-    return set_insert(roster->players, &playerID, player);
-}
-
-// Given the full map, edits what already exists in the visible map
-// then sends display command to player giving their specific visibility map and replacing their playerID with @
+/**************** roster_updateAllPlayers_Helper ****************/
+/* To be passed into set_iterate for roster_updateAllPlayers.
+ * Given a player, tells them to update their visible map based on new server map,
+ * then sends that player new DISPLAY message to update their display.
+ */
 void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     game_t* game = arg;
     player_t* currentPlayer = item;
@@ -61,11 +48,11 @@ void roster_updateAllPlayers_Helper(void* arg, const char* key, void* item) {
     message_send(player_getAddr(currentPlayer), sendDisplayMsg);
     free(sendDisplayMsg);
 }
-void roster_updateAllPlayers(roster_t* roster, game_t* game) {
-    set_iterate(roster->players, game, roster_updateAllPlayers_Helper);
-}
 
-// Updates everyone's gold
+/**************** roster_updateAllPlayersGold_Helper ****************/
+/* To be passed into set_iterate for roster_updateAllPlayersGold.
+ * Sends a GOLD update remaining gold message to given player.
+ */
 void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) {
     game_t* game = arg;
     player_t* currentPlayer = item;
@@ -75,12 +62,11 @@ void roster_updateAllPlayersGold_Helper(void* arg, const char* key, void* item) 
     message_send(player_getAddr(currentPlayer), sendGoldMsg);
     free(sendGoldMsg);
 }
-void roster_updateAllPlayersGold(roster_t* roster, game_t* game) {
-    set_iterate(roster->players, game, roster_updateAllPlayersGold_Helper);
-}
 
-// SEND: QUIT GAME OVER:
-
+/**************** roster_createGameMessage_Helper ****************/
+/* To be passed into set_iterate for roster_createGameMessage.
+ * Appends player name and purse to existing message.
+ */
 void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
     char** playerSummary = arg;
     player_t* player = item;
@@ -88,12 +74,57 @@ void roster_createGameMessage_Helper(void* arg, const char* key, void* item) {
     arg = &playerSummary;
 }
 
+/**************** roster_createGameMessage_sendHelper ****************/
+/* To be passed into set_iterate for roster_createGameMessage.
+ * Sends GAME OVER message to given player.
+ */
 void roster_createGameMessage_sendHelper(void* arg, const char* key, void* item) {
     char* message = arg;
     player_t* player = item;
     message_send(player_getAddr(player), message);
 }
 
+/**************** roster_delete_helper ****************/
+void roster_delete_helper(void* item) {
+    player_t* currPlayer = item;
+    player_delete(currPlayer);
+}
+
+/**************** functions ****************/
+
+/**************** roster_new ****************/
+/* see roster.h for description */
+roster_t* roster_new() {
+
+    roster_t* roster = malloc(sizeof(roster_t));
+    if (roster == NULL) return NULL;
+
+    roster->players = set_new();
+    return roster;
+
+}
+
+/**************** roster_new ****************/
+/* see roster.h for description */
+bool roster_addPlayer(roster_t* roster, player_t* player) {
+    char playerID = player_getID(player);
+    return set_insert(roster->players, &playerID, player);
+}
+
+/**************** roster_updateAllPlayers ****************/
+/* see roster.h for description */
+void roster_updateAllPlayers(roster_t* roster, game_t* game) {
+    set_iterate(roster->players, game, roster_updateAllPlayers_Helper);
+}
+
+/**************** roster_updateAllPlayersGold ****************/
+/* see roster.h for description */
+void roster_updateAllPlayersGold(roster_t* roster, game_t* game) {
+    set_iterate(roster->players, game, roster_updateAllPlayersGold_Helper);
+}
+
+/**************** roster_createGameMessage ****************/
+/* see roster.h for description */
 char* roster_createGameMessage(roster_t* roster) {
     int lineSize = 20 + 50;
     char* message = calloc(lineSize*26, sizeof(char));
@@ -103,8 +134,19 @@ char* roster_createGameMessage(roster_t* roster) {
     return message;
 }
 
-/* find player helpers */
+/**************** roster_delete ****************/
+/* see roster.h for description */
+void roster_delete(roster_t* roster) {
+    set_delete(roster->players, roster_delete_helper);
+    free(roster);
+}
 
+/* get player from info functions */
+
+/**************** roster_getPlayerFromAddr_Helper ****************/
+/* To be passed into set_iterate for roster_getPlayerFromAddr.
+ * Given a player, if it matches the address to be found, then add player to info pack.
+ */
 void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
     findPlayerPack_t* playerPack = arg;
     player_t* currPlayer = item;
@@ -113,13 +155,22 @@ void roster_getPlayerFromAddr_Helper(void* arg, const char* key, void* item) {
     }
 }
 
+/**************** roster_getPlayerFromAddr ****************/
+/* see roster.h for description */
 player_t* roster_getPlayerFromAddr(roster_t* roster, addr_t playerAddr) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchAddress = playerAddr;
     playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromAddr_Helper);
-    return playerPack->foundPlayer;
+    player_t* found = playerPack->foundPlayer;
+    free(playerPack);
+    return found;
 }
+
+/**************** roster_getPlayerFromAddr_Helper ****************/
+/* To be passed into set_iterate for roster_getPlayerFromID.
+ * Given a player, if it matches the ID to be found, then add player to info pack.
+ */
 
 void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item) {
     findPlayerPack_t* playerPack = arg;
@@ -129,10 +180,14 @@ void roster_getPlayerFromID_Helper(void* arg, const char* key, void* item) {
     }
 }
 
+/**************** roster_getPlayerFromID ****************/
+/* see roster.h for description */
 player_t* roster_getPlayerFromID(roster_t* roster, char playerID) {
     findPlayerPack_t* playerPack = malloc(sizeof(findPlayerPack_t));
     playerPack->matchPlayerID = playerID;
     playerPack->foundPlayer = NULL;
     set_iterate(roster->players, playerPack, *roster_getPlayerFromID_Helper);
-    return playerPack->foundPlayer;
+    player_t* found = playerPack->foundPlayer;
+    free(playerPack);
+    return found;
 }

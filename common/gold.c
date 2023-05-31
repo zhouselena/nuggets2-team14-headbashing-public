@@ -38,6 +38,8 @@ typedef struct gold {
 
 /**************** functions ****************/
 
+/**************** gold_new ****************/
+/* see gold.h for description */
 gold_t* gold_new(int totalPiles) {
 
     gold_t* gold = malloc(sizeof(gold_t));
@@ -50,6 +52,8 @@ gold_t* gold_new(int totalPiles) {
 
 }
 
+/**************** gold_addGoldPile ****************/
+/* see gold.h for description */
 void gold_addGoldPile(gold_t* gold, int row, int col, int nuggets) {
 
     goldPile_t* pile = malloc(sizeof(goldPile_t));
@@ -63,22 +67,43 @@ void gold_addGoldPile(gold_t* gold, int row, int col, int nuggets) {
 
 }
 
+/**************** gold_foundPile_Helper ****************/
+/* Opaque to users outside of this file.
+ * Helper function to be passed into set_iterate.
+ * If a gold pile's location matches the location trying to be found, then return gold pile.
+ */
 void gold_foundPile_Helper(void* arg, const char* key, void* item) {
     findGoldPile_t* goldInfoPack = arg;
     goldPile_t* currentPile = item;
     if (currentPile->goldRow == goldInfoPack->findRow && currentPile->goldCol == goldInfoPack->findCol) {
+        currentPile->collected = 1;
         goldInfoPack->matchedPile = currentPile;
     }
 }
 
+/**************** gold_foundPile ****************/
+/* see gold.h for description */
 int gold_foundPile(gold_t* gold, int row, int col) {
 
     findGoldPile_t* goldInfoPack = malloc(sizeof(findGoldPile_t));
     goldInfoPack->findRow = row; goldInfoPack->findCol = col; goldInfoPack->matchedPile = NULL;
     set_iterate(gold->piles, goldInfoPack, gold_foundPile_Helper);
     goldPile_t* foundPile = goldInfoPack->matchedPile;
+    free(goldInfoPack);
     if (foundPile == NULL) return -1;
-    foundPile->collected = 1;
     return foundPile->numNuggets;
 
+}
+
+/**************** gold_delete_helper ****************/
+void gold_delete_helper(void* item) {
+    goldPile_t* currPile = item;
+    free(currPile);
+}
+
+/**************** gold_delete ****************/
+/* see gold.h for description */
+void gold_delete(gold_t* gold) {
+    set_delete(gold->piles, gold_delete_helper);
+    free(gold);
 }
