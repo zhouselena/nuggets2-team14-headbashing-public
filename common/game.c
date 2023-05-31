@@ -218,6 +218,32 @@ void game_updateAllUsers(game_t* game) {
     roster_updateAllPlayers(game->players, game);
 }
 
+/* EXTRA CREDIT: game_stealGold
+ */
+void game_stealGold(game_t* game, player_t* thief, player_t* victim) {
+    // If victim doesn't have any gold nuggets
+    if (player_getGold(victim) <= 0) {
+        char* msg = malloc(strlen("GOLDSTEAL ") + 20);
+        sprintf(msg, "GOLDSTEAL %d %d %d %c", 0, player_getGold(thief), game->remainingGold, player_getID(victim));
+        message_send(player_getAddr(thief), msg);
+        free(msg);
+        return;
+    }
+    // Otherwise, steal one gold from purse
+    player_foundGoldNuggets(thief, 1);
+    player_foundGoldNuggets(victim, -1);
+
+    char* msgToThief = malloc(strlen("GOLDSTEAL ") + 20);
+    sprintf(msgToThief, "GOLDSTEAL %d %d %d %c", 1, player_getGold(thief), game->remainingGold, player_getID(victim));
+    message_send(player_getAddr(thief), msgToThief);
+    
+    char* msgToVictim = malloc(strlen("GOLDSTEAL ") + 20);
+    sprintf(msgToVictim, "GOLDSTEAL %d %d %d %c", -1, player_getGold(victim), game->remainingGold, player_getID(thief));
+    message_send(player_getAddr(victim), msgToVictim);
+
+    free(msgToThief); free(msgToVictim);
+}
+
 /**************** functions ****************/
 /* these are visible to users outside this file */
 
@@ -440,6 +466,8 @@ bool game_h_moveLeft(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, playerRow, newPlayerCol+1, moveTo);                      // set original player spot on map to conflicting player
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         // update player
@@ -507,6 +535,8 @@ bool game_l_moveRight(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, playerRow, newPlayerCol-1, moveTo);                    // reset spot on map
         grid_set(game->fullMap, playerRow, newPlayerCol, player_getID(calledPlayer));    // update player on map
         // update player
@@ -553,6 +583,8 @@ bool game_j_moveDown(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow-1, playerCol, moveTo);                    // reset spot on map
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         // update player
@@ -600,6 +632,8 @@ bool game_k_moveUp(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow+1, playerCol, moveTo);                    // reset spot on map
         grid_set(game->fullMap, newPlayerRow, playerCol, player_getID(calledPlayer));    // update player on map
         // update player
@@ -649,6 +683,8 @@ bool game_y_moveDiagUpLeft(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow+1, newPlayerCol+1, moveTo);                      // reset spot on map
         grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
         // update player
@@ -701,6 +737,8 @@ bool game_u_moveDiagUpRight(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow+1, newPlayerCol-1, moveTo);                      // reset spot on map
         grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
         // update player
@@ -752,6 +790,8 @@ bool game_b_moveDiagDownLeft(game_t* game, addr_t player, const char* message) {
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow-1, newPlayerCol+1, moveTo);                      // reset spot on map
         grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
         // update player
@@ -803,6 +843,8 @@ bool game_n_moveDiagDownRight(game_t* game, addr_t player, const char* message) 
 
     } else if (isalpha(moveTo)) {           // is another player then swap
         player_t* conflictingPlayer = roster_getPlayerFromID(game->players, moveTo);
+        game_stealGold(game, calledPlayer, conflictingPlayer);
+
         grid_set(game->fullMap, newPlayerRow-1, newPlayerCol-1, moveTo);                      // reset spot on map
         grid_set(game->fullMap, newPlayerRow, newPlayerCol, player_getID(calledPlayer));        // update player on map
         // update player
