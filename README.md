@@ -35,7 +35,3 @@ Holding shift while sending any keystroke will allow the player to "run".
 * `support`: provided modules (`message.h`)
 
 ## Known Issues
-
-**Memory leaks in `server`:**
-
-Server frees most of all malloc'd memory, but overwrites existing memory in `roster_createGameMessage_Helper` when the "GAME OVER" message is being constructed.
