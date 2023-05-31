@@ -126,7 +126,7 @@ void initializeDisplay() {
     start_color();
     init_pair(1, COLOR_CYAN, COLOR_BLACK);
     attron(COLOR_PAIR(1));
-    getmaxyx(clientStruct->clientwindow, clientStruct->curX, clientStruct->curY);
+    getmaxyx(clientStruct->clientwindow, clientStruct->curY, clientStruct->curX);
     
     // // Refresh the screen to display changes
     refresh();
@@ -222,14 +222,20 @@ static bool handleMessage(void* arg, const addr_t incoming, const char* message)
             fprintf(stderr, "Error: Cannot parse GRID message.\n");
             return false;
         }
-        while (clientStruct->curX < (nrows+1) || clientStruct->curY < (ncols+1)) {
-            mvprintw(0,0,"Error: Display is not large enough for the grid. Please resize.\n");
+        while (clientStruct->curY < (nrows+1) || clientStruct->curX < (ncols+1)) { // While the window is too small
+            mvprintw(0,0,"Error: Display is not large enough for the grid. Please resize and press enter.\n");  // Let client know 
+            mvprintw(2,0,"Your window must be at least %d wide and %d tall.\n", ncols+1, nrows+1);
+            refresh();
             // Wait for the user to resize the window.
-            while (clientStruct->curX < (nrows+1) || clientStruct->curY < (ncols+1)) {
-                getmaxyx(clientStruct->clientwindow, clientStruct->curX, clientStruct->curY);
+            while (getch() != '\n') { // If they press enter
+                getmaxyx(clientStruct->clientwindow, clientStruct->curY, clientStruct->curX); //Get the new size
             }
-            move(0,0);
         }
+        move(0, 0);      // Move to where error line starts
+        clrtoeol();      // Clear line
+        move(2, 0);      // Move to where 2nd line starts 
+        clrtoeol();      // Clear line
+        refresh();       // Refresh the window and continue 
     }
     // Handle GOLD message
     else if (strncmp(message, "GOLD", 4) == 0) {
@@ -355,7 +361,6 @@ static bool handleInput(void* arg) {
         sprintf(keySend, "KEY %c", keyChar);
         message_send(clientStruct->serverAddr, keySend);
         mem_free(keySend);
-
     }
     else { // If any other key is pressed
         sprintf(keySend, "KEY %c", keyChar);
