@@ -719,7 +719,7 @@ Using miniserver and miniclient, we were able to test server and client individu
 
 ### system testing
 
-We ran server and client together on different servers and different machines to ensure functionality. We tested ./server and ./client on all the maps in the maps directory (not including contributions directories), and manually opened up to 26 client windows to add to the game.
+We ran server and client together on different servers and different machines to ensure functionality. We tested ./server and ./client on all the maps in the maps directory (not including contributions directories), and manually opened up to 26 client windows to add to the game. We also used `valgrind` to test and fix all memory leaks (except for memory leaks caused by ncurses in client).
 
 ---
 
