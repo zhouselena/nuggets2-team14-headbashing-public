@@ -25,17 +25,17 @@ Both: `DESIGN.md`, `IMPLEMENTATION.md`, `README.md`, `.gitignore` Makefiles, tes
 Client module uses one main structure that is `clientStruct`.
 
 ```
-	typedef struct clientStruct {
-		bool isPlayer;
-		char playername[MAX_PLAYER_NAME_LENGTH];
-		char* playerID;
-		addr_t serverAddr;
-		WINDOW* clientwindow;
-		int curX;  
-		int curY;
-		int goldNuggets; 
-		int totalNuggets;
-	} clientStruct_t;
+typedef struct clientStruct {
+    bool isPlayer;
+    char playername[MAX_PLAYER_NAME_LENGTH];
+    char* playerID;
+    addr_t serverAddr;
+    WINDOW* clientwindow;
+    int curX;  
+    int curY;
+    int goldNuggets; 
+    int totalNuggets;
+} clientStruct_t;
 ```
 
 - isPlayer — boolean that returns true if the client is a player, returns false if spectator
@@ -537,17 +537,14 @@ void gold_delete(gold_t* gold);
 
 #### gold_new()
 
-```
     allocate memory for new gold data
     if memory allocation is successful
         set the total number of gold piles
         create a new set for gold piles
     return the new gold data
-```
 
 #### gold_addGoldPile()
 
-```
     allocate memory for a new gold pile
     if memory allocation is successful
         set the row and column for the gold pile
@@ -555,36 +552,30 @@ void gold_delete(gold_t* gold);
         set the collected flag to false
         insert the new gold pile into the gold data set
         increment the gold ID
-```
 
 #### gold_foundPile_Helper()
 
-```
     get the find gold pile data
     get the current gold pile
     if the current gold pile's row and column match the find pile's row and column
         set the collected flag to true
         set the matched pile in the find gold pile data to the current pile
-```
 
 #### gold_foundPile()
 
-```
-allocate memory for find gold pile data
-if memory allocation is successful
-        set the row and column to be found
-        set the matched pile to null
-        iterate over the gold data set with the helper function
-        get the matched pile from the find gold pile data
-        free the find gold pile data
- if no matched pile is found, return -1
- return the number of nuggets in the matched pile
-```
+    allocate memory for find gold pile data
+    if memory allocation is successful
+            set the row and column to be found
+            set the matched pile to null
+            iterate over the gold data set with the helper function
+            get the matched pile from the find gold pile data
+            free the find gold pile data
+    if no matched pile is found, return -1
+    return the number of nuggets in the matched pile
 
 #### gold_delete()
-```
-  free the gold data
-```
+
+    free the gold data
 
 ### Major data structures
 
@@ -628,47 +619,45 @@ player_t* roster_getPlayerFromID(roster_t* roster, char playerID);
 ### Pseudo code for logic/algorithmic flow
 
 #### roster_new()
-```
+
     allocate memory for new roster
     if memory allocation is successful
         create a new set for players
     return the new roster
-```
 
 #### roster_addPlayer()
-```
+
     get the player ID
     insert the new player into the roster set
     return the result of the insertion operation
-```
+
 
 #### roster_updateAllPlayers()
-```
-iterate over the players set with the update helper function
-```
+
+    iterate over the players set with the update helper function
+
 
 #### roster_updateAllPlayersGold()
-```
-iterate over the players set with the gold update helper function
-```
+
+    iterate over the players set with the gold update helper function
+
 
 #### roster_createGameMessage()
-```
+
     allocate memory for game over message
     format the game over message
     iterate over the players set 
     iterate over the players set again to send the game over message
     return the game over message
-```
 
 #### roster_delete() 
-```
+
     delete the players set with the delete helper function
     free the roster
-```
+
 
 #### roster_getPlayerFromAddr()
-```
+
     allocate memory for find player pack
     if memory allocation is successful
         set the address to be found
@@ -677,10 +666,10 @@ iterate over the players set with the gold update helper function
         get the found player from the find player pack
         free the find player pack
     return the found player
-```
+
 
 #### roster_getPlayerFromID()
-```
+
     allocate memory for find player pack
     if memory allocation is successful
         set the ID to be found
@@ -689,7 +678,7 @@ iterate over the players set with the gold update helper function
         get the found player from the find player pack
         free the find player pack
     return the found player
-```
+
 
 ### Major data structures
 
