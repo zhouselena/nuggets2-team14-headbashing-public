@@ -95,13 +95,13 @@ static void parseArgs(const int argc, char* argv[]) {
         exit(2); //Exit program
     }
     else {
-        if (argc == 4) { //
-            clientStruct->isPlayer = true;
+        if (argc == 4) { //If arguments is player, boolean true
+            clientStruct->isPlayer = true; 
             strncpy(clientStruct->playername, argv[3], MAX_PLAYER_NAME_LENGTH - 1);
             clientStruct->playername[MAX_PLAYER_NAME_LENGTH - 1] = '\0';
         }
         else {
-            clientStruct->isPlayer = false;
+            clientStruct->isPlayer = false; //if not, spectator
         }
     }
 }
@@ -116,7 +116,7 @@ static void parseArgs(const int argc, char* argv[]) {
  * Returns: Nothing
  */
 void initializeDisplay() {
-    //Start ncurses mode; create windoe
+    //Start ncurses mode; create window
     WINDOW* newwin = initscr();
     clientStruct->clientwindow = newwin;
 
@@ -126,9 +126,9 @@ void initializeDisplay() {
 
     //Create window for displaying the game
     start_color();
-    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(1, COLOR_CYAN, COLOR_BLACK); // color of the text and background
     attron(COLOR_PAIR(1));
-    getmaxyx(clientStruct->clientwindow, clientStruct->curY, clientStruct->curX);
+    getmaxyx(clientStruct->clientwindow, clientStruct->curY, clientStruct->curX); //set the clients window size
     
     // // Refresh the screen to display changes
     refresh();
@@ -164,14 +164,14 @@ void initializeNetwork(char* server, char* port, FILE* errorFile, char* playerNa
     sprintf(portStr, "%d", atoi(port));
     fprintf(stderr, "Got: %s\n", portStr);
 
-    if (!message_setAddr(server, portStr, &(clientStruct->serverAddr))) {
+    if (!message_setAddr(server, portStr, &(clientStruct->serverAddr))) { //Check if hostname and port number are correct
         fprintf(stderr, "Error: Invalid hostname or port number.\n");
         free(playMessage);
         exit(4);
     }
 
     if (!message_isAddr(clientStruct->serverAddr)) {
-        fprintf(stderr, "Error: Failed to setup server address.\n");
+        fprintf(stderr, "Error: Failed to setup server address.\n"); //Check of serverAddress is correct
         free(playMessage);
         exit(5);
     }
@@ -409,7 +409,7 @@ static bool handleInput(void* arg) {
         mvprintw(0, 0, "Spectator: %d nuggets unclaimed.", clientStruct->totalNuggets);
     }
       
-    clrtoeol();
+    clrtoeol(); // Clear
 
     return false;  // Return false to continue the input loop.
 }
