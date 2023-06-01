@@ -385,30 +385,50 @@ bool game_N_moveDiagDownRight(game_t* game, addr_t player, const char* message);
     send quit message to player
     send display update to all players
 
-####
-- game_foundGold: once player finds gold, updates map, gold count, and all clients
-- game_stealGold: switches gold from one player's purse to another
-- game_updateAllUsers: send DISPLAY update to all clients
-- game_updateAllUsersGold: send GOLD update to all clients
+#### game_foundGold
 
-- lowercase key presses: if possible, move one step towards specified direction. calls helper functions if next spot isn't a room spot
-    - game_h_moveLeft
-    - game_l_moveRight
-    - game_j_moveDown
-    - game_k_moveUp
-    - game_y_moveDiagUpLeft
-    - game_u_moveDiagUpRight
-    - game_b_moveDiagDownLeft
-    - game_n_moveDiagDownRight
-- uppercase key presses: move as many steps towards specified direction as possible. in a loop calls the functino of its lowercase counterpart until it can't go any further
-    - game_H_moveLeft
-    - game_L_moveRight
-    - game_J_moveDown
-    - game_K_moveUp
-    - game_Y_moveDiagUpLeft
-    - game_U_moveDiagUpRight
-    - game_B_moveDiagDownLeft
-    - game_N_moveDiagDownRight
+	gets number of nuggets in pile
+	updates player gold
+	if there is no more remaining gold
+		call end_game and return true
+	else
+		reset original map place
+		send new gold message to all users
+		update spectator with gold message
+		send display update to all users
+
+#### game_stealGold
+
+	if victim has nuggets
+		decrement their purse
+		increment player purse
+		send message to both
+	else
+		send fail steal message to thief
+
+#### lowercase key presses
+
+	if is spectator, don't allow message
+	otherwise, get player
+	make sure next step is not out of bound
+	if next step is a spot but not another player
+		if next step is gold, call found gold and return true if game over
+		reset player's original spot
+		move player and update their visibility
+		send display update to all users
+	if next step is another player
+		swap players
+		call game_stealgold
+		update both player's visibility
+		send display update to all users
+
+#### uppercase key presses
+
+	if is spectator, don't allow message
+	otherwise, while next spot is valid spot,
+		call lowercase key press
+		return if lowercase key press returns true
+		increment player position
 
 ### Major data structures
 
