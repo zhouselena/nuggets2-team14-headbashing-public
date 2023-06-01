@@ -1,553 +1,381 @@
 # CS50 Nuggets
 ## Design Spec
-### Team 14 - Headbashing, Spring, 2023
+### Team 14 - Headbashing, Spring 2023
 
 According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
-Our design also includes map modules.
+Our design also includes `game`, `player`, `roster`, and `gold` modules.
 We describe each program and module separately.
 We do not describe the `support` library nor the modules that enable features that go beyond the spec.
 We avoid repeating information that is provided in the requirements spec.
 
-As we are a team of two, we were provided grid so this will not be covered in our design spec. 
+As we are a team of 2, we were provided with `grid` so this will not be covered in our design spec. 
 
 ## Player/Client
-The client acts in one of two modes:
 
-1. spectator, the passive spectator mode described in the requirements spec.
-2. player, the interactive game-playing mode described in the requirements spec.
+The *client* acts in one of two modes:
+
+ 1. *spectator*, the passive spectator mode described in the requirements spec.
+ 2. *player*, the interactive game-playing mode described in the requirements spec.
 
 ### User interface
+
 The client's interface with the user is on the command-line; it requires two arguments and optionally takes a third:
+
 ```bash
  ./client hostname port [playername]
 ```
-The user also interacts with the game through stdin that allows the player to move about and quit the game. 
+
+The user also interacts with the game through stdin that allows the player to move about and quit the game.
 
 ### Inputs and outputs
-Input: 
-- The client receives keystrokes from the user as input. These keystrokes are interpreted as player commands and sent to the server.
-    - `Q` quit the game.
-    - `h` move left, if possible
-    - `l` move right, if possible
-    - `j` move down, if possible
-    - `k` move up , if possible
-    - `y` move diagonally up and left, if possible
-    - `u` move diagonally up and right, if possible
-    - `b` move diagonally down and left, if possible
-    - `n` move diagonally down and right, if possible
-    - where possible means the adjacent gridpoint in the given direction is an empty spot, a pile of gold, or another player.
-    - for each move key, the corresponding Capitalized character will move automatically and repeatedly in that direction, until it is no longer possible.
-- The client receives messages from the server, such as `OK`,  `GRID`, `GOLD`, `DISPLAY`, `QUIT`, `ERROR` messages. These messages update the state of the game and the display for the player.
-- The client receives a string map from the server
 
-Output:
-- The client sends the keystrokes to the server as a player's move or actions. At anytime it will send,  `KEY k`, where the k is the single-character keystroke typed by user
+**Inputs:**
+
+The client receives keystrokes from the user as input. These keystrokes are interpreted as player commands and sent to the server.
+- `Q` quit the game.
+- `h` move left, if possible
+- `l` move right, if possible
+- `j` move down, if possible
+- `k` move up, if possible
+- `y` move diagonally up and left, if possible
+- `u` move diagonally up and right, if possible
+- `b` move diagonally down and left, if possible
+- `n` move diagonally down and right, if possible
+- where possible means the adjacent gridpoint in the given direction is an empty spot, a pile of gold, or another player.
+- for each move key, the corresponding Capitalized character will move automatically and repeatedly in that direction, until it is no longer possible.
+
+The client receives messages from the server, including `OK`, `GRID`, `GOLD`, `GOLDSTEAL`, `DISPLAY`, `QUIT`, `ERROR` messages. These messages indicate an update in the state of the game and call for an update to the display for the player.
+
+**Output:**
+
+- The client sends the keystrokes to the server as a player's move or actions. At anytime it will send, `KEY k`, where the k is the single-character keystroke typed by the user.
 - The client displays the game grid, status, and any received messages on the user's screen.
 
 ### Functional decomposition into modules
-- Grid module: Module responsible for holding information about the map. The map file will be loaded into a grid module and the grid will be used when traversing over the map.
 
+- Grid module: Module responsible for holding information about the map. The map file will be loaded into a grid module and the grid will be used when traversing over the map.
+ 
 ### Pseudo code for logic/algorithmic flow
+
 The client will run as follows:
 ```
-    parses command line for number of arguments
-    validate arguments 
-    if arguments are valid:
-        hostname = get hostname from arguments
-        port = get port from arguments
-        playername = get playername from arguments (if exists)
-                initialize the game structure
-        initialize the display
-        initialize the network
+parses command line for number of arguments
+validate arguments 
+if arguments are valid:
+    hostname = get hostname from arguments
+    port = get port from arguments
+    playername = get playername from arguments (if exists)
+            initialize the game structure
+    initialize the display
+    initialize the network
 
-        if the playername exists:
-            send message to the server: "PLAY " + playername
-        else:
-            send message to the server: "SPECTATE"
-
-        while game is not over:
-            message = receive message from server
-            process the server message
-            update the display
-
-            if EOF on stdin:
-                send message to the server: "KEY Q"
-
-        logMessage("Game-over")
-        exit with zero
+    if the playername exists:
+        send message to the server: "PLAY " + playername
     else:
-        print "Invalid command line arguments"
-        exit with non zero
+        send message to the server: "SPECTATE"
+
+    while game is not over:
+        message = receive message from server
+        process the server message
+        update the display
+
+        if EOF on stdin:
+            send message to the server: "KEY Q"
+
+    logMessage("Game-over")
+    exit with zero
+else:
+    print "Invalid command line arguments"
+    exit with non zero
 ```
+
 We anticipate the following major functions:
+
 #### main()
 Initializes client structure, parses command-line arguments, initializes display, sets up network connection, enters game loop, and performs cleanup when the game is over.
-```
-    Allocate memory for client structure
-    parse args
-    initialize display and network
-    enter the game loop
-        process server messages or handle the user inputs
-    delete the window
-    free allocated memory
-    end game
-```
 
 #### parseArgs(): 
 Checks the validity of command-line arguments and initializes the client structure accordingly.
-``` 
-    check the validity of command-line arguments
-    initialize the clientStruct accordingly
-```
 
 #### initializeDisplay():
 Sets up the game display.
 
-```
-    Start ncurses mode and create window
-    Set keyboard mapping and dont display the key press 
-    Create window for displaying the game
-    Refresh the screen to display changes
-```
-
 #### initializeNetwork():
 Sets up the network connection, sends the initial message to the server, and starts the message loop.
 
-```
-    For the client to server message
-    if player name is NULL or empty, client is a spectator. Otherwise, player
-    Convert port to string
-    set up server details using hostname and port
-    Initialize the message server
-    Join the server
-    Start message loop
-```
-
 #### handleMessage():
 Handles messages received from the server, updates the game state, and refreshes the display.
-```
-	Handle OK message
-	Handle GRID message
-	Handle GOLD message
-	Handle DISPLAY message
-	Handle QUIT message
-	Handle ERROR message
-	Handle Unknown/ Misordered message
-```
 
 #### handleInput():
 Handles user key presses and sends corresponding messages to the server.
 
-```
-	read the key pressed by the user
-	send a corresponding message to the server
-```
-
 ### Major data structures
 
-1. ClientStruct: This structure represents a client, holding information if the client is a player or spectator, player's name, player ID, gold count, total gold, location in the grid, window, server address.
+1. `clientStruct`: This structure represents a client, holding information if the client is a player or spectator, player's name, player ID, gold count, total gold, location in the grid, window, server address. This data structure uses the `message.h` module.
 
 ---
 
 ## Server
 ### User interface
 
-The severs's only interface with the user is on the command-line; it requires one argument and can optionally take a second:
+The server's only interface with the user is on the command-line; it requires one argument and can optionally take a second:
+
 ```bash
 ./server map.txt [seed]
 ```
-The server has no further interaction with the user after it has been launched. The command-line interface takes the pathname for a map file as its first argument, with an optional second argument serving as a seed for the random-number generator. If a seed is provided, it must be a positive integer.
+
+The server has no further interaction with the user after it has been launched. The command-line takes a path that leads to the map file, and an optional seed. If the seed is provided it must be a positive integer.
 
 ### Inputs and outputs
-Input:
-- Map file: A text file that contains a map layout of the game provided by the command-line argument. The server parses this file to initialize the game grid and setup random gold piles. Optionally, a random seed can also be provided as a command-line argument.
-- Server also receives these messages from client: `PLAY`, `SPECTATE`, `KEY`
 
-Output:
-- Map representation: The server sends a string representation of the map file to the client.
-- Terminal output: Upon launch, the server outputs the port number for client connections. After all gold nuggets are collected, it prepares a summary, sends a `QUIT`, message to all clients, prints the summary to the terminal, and exits.
+**Inputs:**
+
+The server receives no input from the user. The server receives the following messages from `client`:
+- `PLAY playername`: tells server to add *playername* to the game if possible.
+- `SPECTATE`: tells server to add a spectator.
+- `KEY key`: tells server what keystroke was sent by a user.
+
+**Outputs:**
+
+The server sends the following messages to `client`:
+- `OK playerID`: when a new player is added to the game, server immediately sends this.
+- `GRID nrows ncols`: when a new user is added to the game, server immediately sends this.
+- `GOLD n p r`: server sends this when there is an update with gold.
+- `GOLDSTEAL n p r otherPlayerID`: server sends this when a player attempts to steal gold from another player.
+- `QUIT message`: server sends this when a player needs to leave the game.
+- `ERROR explanation`: server sends this when an unexpected error happens.
+
+The server outputs two messages to terminal. Upon launch, it will print `Server is starting at port [portID]`. After the game ends, it will print `Server is shutting down`.
 
 ### Functional decomposition into modules
-- Game module: Module responsible for processing inputs from the clients (such as player moves), updates the game state accordingly (moving players, collecting gold nuggets, etc.), and then sends the updated game state back to the clients. The game engine would use the data structure created by the Map Parser to know the layout of the game world.
-- Player module: Module responsible for holding information for each individual client (such as player position, number of gold nuggets, player name/ID) that will be updated every time the client sends a command.
-- Roster module: Structure that is reponsible for holding the infromation of the roster of players that are in the game
-- Gold module: Structure responsible for holding the data about the gold, including the incrementing counts and placement if the gold
-- Grid module: Module responsible for holding information about the map. The map file will be loaded into a grid module and the grid will be used when traversing over the map.
+
+- `game`: reponsible for holding information for the game, generating the game, adding players, and processing player interactions.
+- `player`: responsible for holding information for one player, including location, purse, and visible maps.
+- `roster`: responsible for holding a set of players and updating information for all players in the set.
+- `gold`: resposible for holding information about each gold pile in the map.
+- used provided modules: `grid`, `message`
 
 ### Pseudo code for logic/algorithmic flow
+
 The server will run as follows:
+
 ```
-    parses to validate command line for number of arguments
-	initializeGame using the map file
-	initialize the message module and print the port number
-	call message_loop to await messages from clients:
-		for each client that connects:
-			  handle the message that is sent
-		upon receipt of EOF or a QUIT command, call game_over to shut down the server
+parses to validate command line for valid arguments
+initialize game using the map file
+initialize the message module and print the port number
+call message_loop to await messages from clients:
+    for each client that connects:
+            handle the message that is sent
+    upon receipt of EOF or a QUIT command, call game_over to shut down the server
 ```
 We anticipate the following major functions:
 
 #### parseArgs():
 Parses and validates the command-line arguments. It exits with a nonzero status if the arguments are incorrect or invalid.
-```
-If the number of arguments is less than 2 or more than 3 
-    Print usage message, exit
-Open the map file from the argument list
-    If fail, print error, exit
-Close the map file
-If there is a third argument 
-    Parse the seed from the argument
-    If fail, print error, exit
-    Set the random seed to the parsed seed
-Else
-    Set the random seed to the process id
-```
 
 #### initializeGame():
 This function initializes the game locally, creating the game/grid from the provided map file and setting up random gold piles.
-```
-make new game from the provided map file name
-if game creation fails then,
-    error and exit
-```
 
 #### handleInput():
 This function handles input from stdin and is used to detect EOF.
-```
-If EOF is reached, true
-else, return false
-```
 
 #### handleMessage():
 This function is responsible for handling messages from clients. It calls appropriate game functions based on the input message from a client.
-```
-If the message is "PLAY" 
-    Add a new player to the game 
-If the message starts with "SPECTATE" 
-    Add a new spectator to the game 
-If the message starts with "KEY" 
-    Handle a key press 
-    Return the result of the key press handler
-If else, error
-Return false
-```
 
 #### gameOver():
-This function frees all resources related to the game and shuts down the server gracefully by calling `message_done()`.
-```
-Delete the game
-Print a shutdown message
-Call the message_done function
-```
+This function frees all information the game holds and shuts down the server gracefully by calling `message_done()`.
 
 ### Major data structures
-- Player struct: Holds information for each player, including port ID, player ID, player name, location, gold count, vision grid, and flags for whether the player has seen all spots on the map.
-- Game struct: Contains all game-related data including an array of players, game map, and counters for gold piles.
-- Grid: This data structure represents the game map. It contains information about the layout of the map and the locations of gold nuggets.
-- libcs50 modules: counter of gold piles in map and its locations, hashtable of players
+
+- `game`: holds information about the entire game include a roster of players, all maps, and gold information.
+- `player`: holds information for an individual player, including their address, player ID, player name, location, purse, and visible maps.
+- `roster`: holds a set of players and info
+- `gold`: holds a set of all gold piles and info about each pile
+- other modules: `grid`, `set`, `message`
 
 ---
 
-## Player module
-Player is included in both client and server.
+## Extra credit
+* When a player exits the game with keystroke Q, their purse is dropped in a gold pile at the last location they were. Implemented in `game` module
+* When a player steps on another player, they "steal" one gold nugget if available from that player. Implemented in `game` module
+
+---
+
+## game module
+
+`game` is used in server.
 
 ### Functional decomposition
+
 We anticipate the following major functions:
+- game_new: allocates memory for new game and initializes sets and maps
+- game_delete: frees all memory malloc'd in game struct
+- end_game: sends GAME OVER summary to all clients
+- game_addPlayer: if possible, add player to game
+- game_addSpectator: add spectator game and kick out the previous spectator
+- game_keyPress: call respective key functions
+- game_Q_quitGame: let a player quit the game
 
-- player_new() — Allocates memory for a new player. Sets the player's unique ID and initializes gold to zero.
-- player_delete() — Frees all allocated memory for the player, including player name, visible map, visible gold, and the player itself.
-- player_setAddress() — Sets the player's address.
-- player_setName() — Sets the player's name.
-- player_initializeGridAndLocation() — Sets the player's visible map, location, and initializes the player's visible gold map based on the - - provided visible grid and gold map.
-- player_moveUpAndDown() — Moves the player up or down the grid by a certain number of steps and updates the player's visible map.
-- player_moveLeftAndRight() — Moves the player left or right on the grid by a certain number of steps and updates the player's visible map.
-- player_foundGoldNuggets() — Increases the player's gold count by a certain amount.
-- player_updateVisibility() — Updates the player's visibility based on the full map and gold map.
-- player_serverMapUpdate() — Updates the player's visible map based on the server's game map and gold map.
+We anticipate the following helper functions:
+- game_setGold: sets up random number of gold piles and nuggets per pile all across the map
+- game_sendOKMessage: constructs OK message to send to client
+- game_sendGridMessage: constructs GRID message to send to client
+- game_sendGoldMessage: constructs GOLD message to send to client
+- game_sendDisplayMessage: constructs DISPLAY message to send to client
+- game_foundGold: once player finds gold, updates map, gold count, and all clients
+- game_stealGold: switches gold from one player's purse to another
+- game_updateAllUsers: send DISPLAY update to all clients
+- game_updateAllUsersGold: send GOLD update to all clients
 
-Getters
-- player_getAddr() — Returns the player's address.
-- player_getID() — Returns the player's ID.
-- player_getName() — Returns the player's name.
-- player_getXLocation() — Returns the player's x coordinate on the map.
-- player_getYLocation() — Returns the player's y coordinate on the map.
-- player_getMap() — Returns the player's visible map.
-- player_getVisibleGold() — Returns the player's visible gold map.
-- player_getGold() — Returns the amount of gold the player has collected.
+We anticipate the following key functions:
+- lowercase key presses: if possible, move one step towards specified direction. calls helper functions if next spot isn't a room spot
+    - game_h_moveLeft
+    - game_l_moveRight
+    - game_j_moveDown
+    - game_k_moveUp
+    - game_y_moveDiagUpLeft
+    - game_u_moveDiagUpRight
+    - game_b_moveDiagDownLeft
+    - game_n_moveDiagDownRight
+- uppercase key presses: move as many steps towards specified direction as possible. in a loop calls the functino of its lowercase counterpart until it can't go any further
+    - game_H_moveLeft
+    - game_L_moveRight
+    - game_J_moveDown
+    - game_K_moveUp
+    - game_Y_moveDiagUpLeft
+    - game_U_moveDiagUpRight
+    - game_B_moveDiagDownLeft
+    - game_N_moveDiagDownRight
 
-### Pseudo code for logic/algorithmic flow
-#### player_initializeGridAndLocation() 
-#### player_moveUpAndDown()
-#### player_moveLeftAndRight() 
-#### player_updateVisibility() 
-#### player_serverMapUpdate() 
-
-### Major Data Structures
-Player Struct
-- playerAddress: Address of the player.
-- playerID: Unique ID for the player, incrementing from 'A'.
-- playerName: Name of the player given by the client input.
-- playerXLocation & playerYLocation: The current location coordinates of the player on the grid.
-- numGold: The amount of gold the player has collected.
-- visibleMap: The grid of the map that is currently visible to the player.
-- visibleGold: The grid that shows the gold which is currently visible to the player.
-
----
-
-## Game module
-### Functional decomposition
-Active client list: A list of currently connected clients, containing client socket descriptors and related client information.
-- game_new() — Initializes a new map and info, sets up gold. 
-- game_delete() — Funtion frees the informaiton of game and deletes it
-- end_game() — Sends a GAME OVER message when all gold is picked up
-- game_addPlayer() — Adds a player to the game if it is not full
-- game_addSpectator() - Funtion called when server handled the mesage SPECTATE from the client. Adds spectator and kicks other one out
-- game_keyPress() - function called to handle keys pressed from the player --- calls on each letter press helper function
-- game_returnFullMap() - Function that returns a map with all the players ID
-- game_returnGoldMap() - Function that returns a map with the gold locations that are all uncollected
-- game_returnRemainingGold() - Functions that says how many gold piles are left
-- helper messages that send the GRID, OK, DISPLAY, GOLD, ERROR, QUIT, messages to client
+Getters:
+- game_returnFullMap: returns map with rooms and player IDs
+- game_returnGoldMap: returns map with all gold piles
+- game_returnRemainingGold: returns how much gold is remaining
 
 ### Pseudo code for logic/algorithmic flow
-#### game_new()
-```
-    create a new roster if player logs on
-    initialize all the variables of game struct
-        set spectator to message_noAddr
-        set maps
-        set the grid rows and columns
-        set the remaining gold to the total
-        set the number of players
-    return the game information
 
-```
-#### game_delete() 
-```
-    delete roster players
-    delete all the maps
-    free all game struct info
-```
-#### end_game()
-```
-    call roster functions to make the send message
-    send to player
-    send to spectator
-```
-#### game_addSpectator()
-```
-    if the client is a spectator
-        make sure not a player 
-        remove the old spectator
-        set new spectator as spectator 
-        send GOLD
-        send GRID
-        send DISPLAY
-```
-#### game_addPlayer() 
-```
-    check if at max player
-        send quit
-    check if spectator is sending a key press
-        send error
-    check if name is provided
-        if only "" then send quit
-    
-    increment the number of players
-    create a new player
-        call functions from player module
-        add to roster
-        initialize the random location of player
-            not on top of another player
-        call functions from grid module
-            set the grid, make visible to player
-        update player visibility
-    send "OK playerID" to client 
-    send GRID GOLD DISPLAY to client
-    update all the users of the game
-         
+Detailed pseudo code for each function can be found in `IMPLEMENTATION.md`.
 
-```
-#### game_keyPress()
-```
-    get player from address 
-    send error and return flase if doesnt work
-    switch of the message from client
-        case Q
-            call game_Q
-        case h
-            call game_h
-        case j
-            call game_j
-        case k
-            call game_k
-        case l
-            call game_l
-        case y
-            call game_y
-        case u
-            call game_u
-        case n
-            call game_n
-    default: send message to player "ERROR"
+### Major data structures
 
-```
-
-
-### Major Data Structure
-Game struct:
-- Roster of players
-- Number of players
-- Original map
-- Full map
-- Gold map
-- Gold map
-- Map rows
-- Map column
-- Number of remaining gold
+`game_t`
+- roster of players
+- number of players
+- original map
+- full map (with player ID's)
+- gold map
+- map rows
+- map columns
+- remaining gold count
 
 ---
 
-## Gold Structure — Module
-The Gold module manages gold piles in the game. It contains the following key structures:
-- `goldPile_t`: This represents a pile of gold in the game. It contains the following data:
-    - `goldRow` & `goldCol`: The coordinates (row and column) of the gold pile on the game grid.
-    - `numNuggets`: The number of gold nuggets in the pile.
-    - `collected`: A flag indicating whether the gold pile has been collected or not.
-- `gold_t`: This represents the overall gold data in the game. It contains the following data:
-    - `numPiles`: The total number of gold piles.
-    - `piles`: A set data structure containing all the gold piles.
+## player module
+
+`player` is used in server.
 
 ### Functional decomposition
-- gold_new()— create new data for new gold 
-- gold_addGoldPile()— add a new gold pile including setting the row, number of nuggets, and incrementing gold 
-- gold_foundPile_Helper()— helper function called when player finds a fil
-- gold_foundPile()— finding a gold pile. returns number of nuggets in pile
-- gold_delete()— detes the gold data set and frees it
 
-### Pseudo Code for Logic/Algorithmic Flow
-#### gold_new()
-```
-    allocate memory for new gold data
-    if memory allocation is successful
-        set the total number of gold piles
-        create a new set for gold piles
-    return the new gold data
-```
+We anticipate the following major functions:
+- player_new: mallocs space for a new player, initializes its purse, and gives it a unique player ID
+- player_delete: frees all space malloc'd for player
+- player_initializeGridAndLocation: sets player's starting location, visible map, and visible gold map
 
-#### gold_addGoldPile()
-```
-    allocate memory for a new gold pile
-    if memory allocation is successful
-        set the row and column for the gold pile
-        set the number of nuggets in the pile
-        set the collected flag to false
-        insert the new gold pile into the gold data set
-        increment the gold ID
-```
+updaters:
+- player_moveUpAndDown: updates player's Y location
+- player_moveLeftAndRight: updates player's X location
+- player_foundGoldNuggets: updates player's purse
+- player_updateVisibility: updates player's visible map
 
-#### gold_foundPile_Helper()
-```
-    get the find gold pile data
-    get the current gold pile
-    if the current gold pile's row and column match the find pile's row and column
-        set the collected flag to true
-        set the matched pile in the find gold pile data to the current pile
-```
+setters:
+- player_setAddress
+- player_setName
 
-#### gold_foundPile()`
-```
-allocate memory for find gold pile data
-if memory allocation is successful
-        set the row and column to be found
-        set the matched pile to null
-        iterate over the gold data set with the helper function
-        get the matched pile from the find gold pile data
-        free the find gold pile data
- if no matched pile is found, return -1
- return the number of nuggets in the matched pile
-```
-#### gold_delete()`
-```
-  free the gold data
-```
+getters:
+- player_getAddr
+- player_getID
+- player_getName
+- player_getXLocation
+- player_getYLocation
+- player_getMap
+- player_getVisibleGold
+- player_getGold
+
+### Pseudo code for logic/algorithmic flow
+
+Detailed pseudo code for each function can be found in `IMPLEMENTATION.md`.
+
+### Major data structures
+
+`player_t`
+- player address
+- player ID
+- player name
+- player x, y coords
+- player purse
+- player visible map
+- player visible gold map
 
 ---
 
-## Roster Structure — Module
-The Roster module manages a set of players in the game. 
+## roster module
+
+`roster` is used in server.
 
 ### Functional decomposition
-- roster_new()— create new roster
-- roster_addPlayer()— add new player to roster
-- roster_updateAllPlayers()— update all players in roster
-- roster_updateAllPlayersGold()— update gold for all the players in the roster 
-- roster_createGameMessage()— create the game over message
-- roster_delete()— delete the roster 
-- roster_getPlayerFromAddr()— gets the player from the roster by address
-- roster_getPlayerFromID()— gets the player from the roster by its ID
 
-### Pseudo Code for Logic/Algorithmic Flow
-#### roster_new()
-```
-    allocate memory for new roster
-    if memory allocation is successful
-        create a new set for players
-    return the new roster
-```
-#### roster_addPlayer()
-```
-    get the player ID
-    insert the new player into the roster set
-    return the result of the insertion operation
-```
-#### roster_updateAllPlayers()
-```
-iterate over the players set with the update helper function
-```
-#### roster_updateAllPlayersGold()
-```
-iterate over the players set with the gold update helper function
-```
-#### roster_createGameMessage()
-```
-    allocate memory for game over message
-    format the game over message
-    iterate over the players set 
-    iterate over the players set again to send the game over message
-    return the game over message
-```
-#### roster_delete() 
-```
-    delete the players set with the delete helper function
-    free the roster
-```
-#### roster_getPlayerFromAddr()
-```
-    allocate memory for find player pack
-    if memory allocation is successful
-        set the address to be found
-        set the found player to null
-        iterate over the players set with the address helper function
-        get the found player from the find player pack
-        free the find player pack
-    return the found player
-```
-#### roster_getPlayerFromID()
-```
-    allocate memory for find player pack
-    if memory allocation is successful
-        set the ID to be found
-        set the found player to null
-        iterate over the players set with the ID helper function
-        get the found player from the find player pack
-        free the find player pack
-    return the found player
-```
+We anticipate the following functions:
+- roster_new: mallocs for roster and initializes player set
+- roster_addPlayer: adds a new player to the set with key player ID
+- roster_updateAllPlayers: sends DISPLAY message to all players in player set
+- roster_updateAllPlayersGold: sends GOLD message to all players in player set
+- roster_createGameMessage: creates GAME OVER message with all players and their purses
+- roster_delete: frees all memory used by roster
+- roster_getPlayerFromAddr: returns a player that matches a given address
+- roster_getPlayerFromID: returns a player that matches a given ID
 
-### Major Data Structure
-It contains the following key structures:
-- `roster_t`: This represents a roster of players in the game. It contains a set of players.
-- `findPlayerPack_t`: This structure is used when searching for a specific player in the roster. It contains the following data:
-    - `matchAddress`: The address of the player to be found.
-    - `matchPlayerID`: The player ID of the player to be found.
-    - `foundPlayer`: The found player, if any.
+### Pseudo code for logic/algorithmic flow
+
+Detailed pseudo code for each function can be found in `IMPLEMENTATION.md`.
+
+### Major data structures
+
+`roster_t`
+- set of players
+
+`findPlayerPack_t`
+- address of player to be found
+- ID of player to be found
+- the found player
+
+---
+
+## gold module
+`gold` is used in server.
+
+### Functional decomposition
+
+We anticipate the following functions:
+- gold_new: mallocs space for gold and initializes gold pile set
+- gold_addGoldPile: adds a gold pile to the set
+- gold_foundPile: returns the number of nuggets at the given XY locatino
+- gold_delete: frees all memory used by gold
+
+### Pseudo code for logic/algorithmic flow
+
+Detailed pseudo code for each function can be found in `IMPLEMENTATION.md`.
+
+### Major data structures
+
+`goldPile_t`
+- x, y coordinates
+- number of nuggets
+- has it been collected yet?
+
+`gold_t`
+- set of gold piles
+- number of gold piles
+
+`findGoldPile_t`
+- x, y coordinates of gold pile
+- the gold pile at the x, y coords
