@@ -451,18 +451,74 @@ typedef struct game {
 
 ## player module
 
-> Repeat this section for each module that is included in either the client or server.
 ### Functional decomposition
 
-> List each of the main functions implemented by this module, with a phrase or sentence description of each.
+```c
+player_t* player_new();
+void player_delete(player_t* player);
+void player_setAddress(player_t* player, addr_t address);
+void player_setName(player_t* player, char* name);
+void player_initializeGridAndLocation(player_t* player, grid_t* visibleGrid, grid_t* visibleGold, int locationX, int locationY);
+void player_moveUpAndDown(player_t* player, int steps, char resetMapSpot);
+void player_moveLeftAndRight(player_t* player, int steps, char resetMapSpot);
+void player_foundGoldNuggets(player_t* player, int numGold);
+void player_updateVisibility(player_t* player, grid_t* fullMap, grid_t* goldMap);
+
+/* getters */
+addr_t player_getAddr(player_t* player);
+char player_getID(player_t* player);
+char* player_getName(player_t* player);
+int player_getXLocation(player_t* player);
+int player_getYLocation(player_t* player);
+grid_t* player_getMap(player_t* player);
+grid_t* player_getVisibleGold(player_t* player);
+int player_getGold(player_t* player);
+```
+
 ### Pseudo code for logic/algorithmic flow
 
-> For any non-trivial function, add a level-4 #### header and provide tab-indented pseudocode.
-> This pseudocode should be independent of the programming language.
+#### player_new()
+
+    initializes player
+    assigns player unique player ID based on global player ID char
+    start player purse with 0
+
+#### player_delete()
+
+    free player name
+    delete player maps
+    free player
+
+#### player_initializeGridAndLocation
+
+    set player information to initialized location
+    set player's viisble gold map
+
+#### player_moveUpAndDown and player_moveLeftAndRight
+
+    reset player's previous position in it's own visible map
+    change x or y location
+    set player location to @
+
+#### player_updateVisibility
+
+    adds additional visible map to player's existing visible map
+    update player's visible gold map
+
 ### Major data structures
 
-> Describe each major data structure in this module: what information does it represent, how does it represent the data, and what are its members.
-> This description should be independent of the programming language.
+```c
+typedef struct player {
+    addr_t playerAddress;           // player address
+    char playerID;                  // unique ID starting from A, B, C...
+    char* playerName;               // player real name that client inputs
+    int playerXLocation;            // player location x value
+    int playerYLocation;            // player location y value
+    int numGold;                    // player wallet
+    grid_t* visibleMap;             // player's visible map
+    grid_t* visibleGold;            // player's visible gold
+} player_t;
+```
 
 ---
 
