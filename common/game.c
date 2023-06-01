@@ -167,7 +167,7 @@ bool game_foundGold(game_t* game, player_t* player, int goldRow, int goldCol) {
     int purse = player_getGold(player);
     game_sendGoldMessage(game, player_getAddr(player), numbNuggets, purse);
     // update spectator
-        if (message_isAddr(game->spectator)) {
+    if (message_isAddr(game->spectator)) {
         game_sendGoldMessage(game, game->spectator, 0, 0);
     }
     game_updateAllUsersGold(game);
